@@ -1,7 +1,27 @@
-class Entity {
-  constructor({ x, y, texture, hp }) { /* posição, textura, hp, alive = true */ }
-  update(dt) { /* sobrescrito pelas subclasses */ }
-  render(renderer) { /* pede pro Renderer desenhar seu quad com sua textura/transform */ }
-  getBounds() { /* retorna { x, y, radius } — usado pela colisão */ }
-  takeDamage(amount) { /* reduz hp, marca alive=false se <= 0 */ }
+export class Entity {
+  constructor({ x, y, texture, hp = 1 }) {
+    this.x = x;
+    this.y = y;
+    this.texture = texture;
+    this.hp = hp;
+    this.maxHp = hp;
+    this.alive = true;
+  }
+
+  update(dt) {
+    // cada subclasse (Betta, Enemy, Projectile...) sobrescreve isso
+  }
+
+  render(renderer) {
+    renderer.desenharSprite(this);
+  }
+
+  obterLimites() {
+    return { x: this.x, y: this.y, radius: this.radius ?? 16 };
+  }
+
+  receberDano(amount) {
+    this.hp -= amount;
+    if (this.hp <= 0) this.alive = false;
+  }
 }
