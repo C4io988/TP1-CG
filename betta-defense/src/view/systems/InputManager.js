@@ -8,8 +8,11 @@ export class InputManager {
     window.addEventListener('keydown', (e) => this.keys.add(e.key.toLowerCase()));
     window.addEventListener('keyup', (e) => this.keys.delete(e.key.toLowerCase()));
 
-    canvas.addEventListener('click', (e) => {
-      this.pendingClick = this.converterPosicaoParaJogo(e.clientX, e.clientY);
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const pixelX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const pixelY = (e.clientY - rect.top) * (canvas.height / rect.height);
+      this.pendingClick = this.camera.telaParaMundo(pixelX, pixelY);
     });
   }
 
@@ -17,16 +20,6 @@ export class InputManager {
     return this.keys.has(key);
   }
 
-  converterPosicaoParaJogo(clientX, clientY) {
-    const rect = this.canvas.getBoundingClientRect();
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-    };
-  }
-
-  // Retorna a posição do último clique não-consumido, ou null.
-  // Consumir (e não só ler) evita processar o mesmo clique em vários frames.
   consumirClique() {
     const click = this.pendingClick;
     this.pendingClick = null;

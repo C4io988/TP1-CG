@@ -10,6 +10,7 @@ export class Shader {
       projection: gl.getUniformLocation(this.program, 'u_projection'),
       model: gl.getUniformLocation(this.program, 'u_model'),
       texture: gl.getUniformLocation(this.program, 'u_texture'),
+      tint: gl.getUniformLocation(this.program, 'u_tint'),
     };
   }
 
@@ -17,8 +18,7 @@ export class Shader {
     this.gl.useProgram(this.program);
   }
 
-  // Busca os arquivos .vert/.frag via fetch (por isso o jogo precisa
-  // rodar num servidor local, não direto pelo file://).
+  // Busca os arquivos .vert/.frag
   static async loadFromFiles(gl, vertUrl, fragUrl) {
     const [vertSource, fragSource] = await Promise.all([
       fetch(vertUrl).then((r) => r.text()),
