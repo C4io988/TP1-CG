@@ -4,9 +4,15 @@ export class CollisionSystem {
       if (!enemy.alive) continue;
       if (enemy.attackCooldown > 0) continue;
 
-      const alvo = enemy.targetKind === 'tower' || enemy.alvo === 'torre' ? tower : betta;
-      if (this.colisao(alvo, enemy)) {
-        alvo.receberDano(enemy.contactDamage);
+      const encostouNoBetta = this.colisao(betta, enemy);
+      const encostouNoTitanic = this.colisao(tower, enemy);
+      const atacaTitanic = enemy.targetKind === 'tower' || enemy.alvo === 'torre';
+
+      if (encostouNoBetta) {
+        betta.receberDano(enemy.contactDamage);
+        enemy.attackCooldown = 1;
+      } else if (atacaTitanic && encostouNoTitanic) {
+        tower.receberDano(enemy.contactDamage);
         enemy.attackCooldown = 1; // 1s entre ataques de contato do mesmo inimigo
       }
     }
