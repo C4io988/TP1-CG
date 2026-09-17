@@ -9,6 +9,8 @@ const ATTACK_RANGE = 250; // pixels
 export class Betta extends Entity {
   constructor({ x, y, texture }) {
     super({ x, y, texture, hp: 100 });
+    this.width = 46;
+    this.height = 30;
     this.size = 40;
     this.radius = 20;
     this.speed = SPEED;

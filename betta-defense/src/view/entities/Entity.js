@@ -6,10 +6,15 @@ export class Entity {
     this.hp = hp;
     this.maxHp = hp;
     this.alive = true;
+    this.hitFlash = 0;
   }
 
   update(dt) {
-    // cada subclasse (Betta, Enemy, Projectile...) sobrescreve isso
+    if (this.hitFlash > 0) this.hitFlash -= dt;
+  }
+
+  get tint() {
+    return this.hitFlash > 0 ? [2.2, 2.2, 2.2, 1] : [1, 1, 1, 1];
   }
 
   render(renderer) {
@@ -22,6 +27,10 @@ export class Entity {
 
   receberDano(amount) {
     this.hp -= amount;
-    if (this.hp <= 0) this.alive = false;
+    this.hitFlash = 0.08;
+    if (this.hp <= 0) {
+      this.hp = 0;
+      this.alive = false;
+    }
   }
 }

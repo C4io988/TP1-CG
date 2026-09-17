@@ -10,10 +10,7 @@ export class Texture {
     gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
   }
 
-  // Cria uma textura 1x1 de cor sólida — usado como placeholder enquanto
-  // os sprites de verdade (assets/images/...) não existem. Ainda é uma
-  // textura de verdade passando pelo pipeline do WebGL, só não é uma
-  // imagem/sprite ainda.
+  // Cria uma textura 1x1 de cor sólida 
   static fromColor(gl, [r, g, b, a] = [255, 0, 128, 255]) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -28,7 +25,7 @@ export class Texture {
     return new Texture(gl, tex);
   }
 
-  // Carrega uma imagem real — usem isso quando os assets (sprites) do
+  // Carrega uma imagem real — usar isso quando os assets (sprites) do
   // Betta/inimigos/armas estiverem prontos em assets/images/...
   static fromImage(gl, url) {
     const tex = gl.createTexture();
