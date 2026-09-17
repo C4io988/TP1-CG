@@ -1,35 +1,47 @@
-# Plano do Jogo — "Betta Defense"
+# Betta Defense
 
-## Conceito
-Tower Defense com estrutura de movimentação estilo *survivors-like*: o Peixe Betta atua como a "torre" do jogo, mas, em vez de ficar fixo, move-se pelo cenário (os destroços do Titanic) enquanto ataca automaticamente os inimigos que se aproximam. Ele acumula melhorias de arma e sobrevivência conforme o jogo avança.
+## Sobre o jogo
 
-## Elementos Centrais
+Betta Defense é um jogo de defesa com elementos de *survivors-like*. O Titanic
+fica parado no cenário e precisa ser protegido dos monstros que chegam pelas
+bordas. O Betta é o personagem controlado pelo jogador e pode nadar pelo mapa
+para ajudar na defesa.
 
-### 1. O Betta (Torre / Personagem Principal)
-* **Controle:** Movimentação exclusiva via teclado (WASD) para navegar pelo cenário.
-* **Ataque:** Dispara automaticamente contra o inimigo mais próximo que estiver dentro do seu alcance, sem necessidade de comando de ataque do jogador.
-* **Atributos:** Possui HP próprio, que será exibido constantemente na HUD.
-* **Arsenal:** A arma inicial consiste em uma pistola/rifle, podendo evoluir conforme a progressão.
+## O que já funciona
 
-### 2. Inimigos
-* **Comportamento Base:** Peixes e monstros marinhos surgem das bordas da tela e caminham continuamente em direção ao Betta.
-* **Variedade Mecânica:** Apresentam diferenças mecânicas reais entre os tipos (não apenas visuais), variando em velocidade, quantidade de HP, dano de contato e padrões de movimento.
-* **Ataque:** Causam dano por contato ou proximidade ao Betta (o que substitui o "ataque à torre" tradicional).
-* **Dificuldade Progressiva:** A frequência e a quantidade de inimigos gerados (*spawn*) aumentam com o tempo.
+- O Betta se move com `WASD` ou pelas setas do teclado.
+- O Betta dispara automaticamente quando existe um inimigo próximo.
+- O Titanic também dispara sozinho contra os inimigos ao seu alcance.
+- O clique do mouse ativa um golpe em área do Titanic.
+- Existem quatro tipos de inimigos: sardinha, piranha, tubarão e lula.
+- Alguns inimigos perseguem o Betta e outros vão direto para o Titanic.
+- Cada tipo possui vida, velocidade e dano próprios.
+- Os inimigos entram pela esquerda e pela parte de baixo do mapa.
+- A frequência dos inimigos aumenta com o tempo.
+- Inimigos derrotados podem deixar power-ups.
+- O Betta coleta os power-ups ao passar por cima deles.
+- Os power-ups podem melhorar o dano, a cadência e a área do Titanic, além de
+	recuperar a vida do Titanic ou do Betta.
+- A HUD mostra a vida dos dois personagens, a pontuação e os upgrades.
+- O jogo termina quando o Titanic ou o Betta ficam sem vida.
+- A partida pode ser reiniciada pela tela de Game Over.
+- A câmera usa um tamanho virtual fixo e mantém a proporção em telas diferentes.
 
-### 3. Interação do Jogador
-* **Sistema de "Dedada":** O clique com o mouse em um inimigo subtrai o HP dele diretamente.
-* **Separação de Controles:** O mouse serve única e exclusivamente para clicar nos inimigos (causar dano), enquanto o teclado (WASD) cuida 100% da movimentação, evitando qualquer conflito de comandos.
+## Controles
 
-### 4. Power-ups e Progressão
-* **Drops:** Inimigos derrotados deixam cair itens de forma aleatória.
-* **Cura:** Sacos de ração que, ao serem coletados, recuperam o HP do Betta.
-* **Melhorias:** Upgrades de arma, aumento de defesa ou vida.
+- `WASD` ou setas: movimentar o Betta.
+- Clique do mouse: usar o golpe em área do Titanic.
 
-### 5. Interface (HUD)
-* **Métricas:** Exibição da vida atual do Betta.
-* **Critério de Pontuação:** Baseado na quantidade de inimigos derrotados e/ou no tempo total de sobrevivência.
+## O que ainda falta
 
-### 6. Condição de Derrota
-* **Fim de Jogo:** Ocorre quando o HP do Betta chega a zero.
-* **Game Over:** Exibição de uma tela própria de encerramento, contendo a opção de reiniciar a partida.
+- Trocar os retângulos coloridos por sprites e texturas reais.
+- Usar os caminhos de imagem que já estão definidos nos arquivos de dados.
+- Fazer o arpão e o canudinho funcionarem como armas disponíveis durante a
+	partida.
+- Criar telas de menu ou splash, caso sejam exigidas na entrega.
+- Adicionar sons e partículas, que são melhorias opcionais.
+
+## Como executar
+
+O jogo usa módulos JavaScript e carrega os shaders com `fetch`. Por isso, deve
+ser aberto por um servidor local
