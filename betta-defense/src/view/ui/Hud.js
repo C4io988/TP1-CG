@@ -1,67 +1,92 @@
 export class Hud {
-  constructor() {
-    this.root = document.getElementById('hud');
-    this.root.innerHTML = `
-      <div class="hud-panel">
-        <div class="bar-row"><span class="bar-label">Titanic</span><div class="hp-track"><div id="tower-hp" class="hp-fill tower"></div></div><span id="tower-hp-text" class="bar-value"></span></div>
-        <div class="bar-row"><span class="bar-label">Betta</span><div class="hp-track"><div id="betta-hp" class="hp-fill betta"></div></div><span id="betta-hp-text" class="bar-value"></span></div>
-        <div id="score" class="score">Pontos: 0</div>
-        <div id="upgrades" class="upgrades"></div>
-      </div>
-      <div id="toast" class="toast"></div>
-      <div id="game-over" class="game-over hidden">
-        <h1>Game Over</h1>
-        <p id="game-over-reason"></p>
-        <p id="final-score"></p>
-        <button id="restart-btn">Jogar de novo</button>
-      </div>
-    `;
+    constructor() {
+        this.hudElement = document.getElementById('hud');
+        this.gameOverScreen = document.getElementById('game-over-screen');
+        this.gameOverText = this.gameOverScreen.querySelector('h1');
+        this.restartBtn = document.getElementById('restart-btn');
+    }
 
-    this.towerHp = document.getElementById('tower-hp');
-    this.towerHpText = document.getElementById('tower-hp-text');
-    this.bettaHp = document.getElementById('betta-hp');
-    this.bettaHpText = document.getElementById('betta-hp-text');
-    this.scoreEl = document.getElementById('score');
-    this.upgradesEl = document.getElementById('upgrades');
-    this.toastEl = document.getElementById('toast');
-    this.gameOverEl = document.getElementById('game-over');
-    this.reasonEl = document.getElementById('game-over-reason');
-    this.finalScoreEl = document.getElementById('final-score');
-    this.restartBtn = document.getElementById('restart-btn');
-    this.toastTimer = null;
-  }
+    ocultar() {
+        this.gameOverScreen.style.display = 'none';
+    }
 
-  update({ tower, betta, score }) {
-    this.atualizarBarra(this.towerHp, this.towerHpText, tower.hp, tower.maxHp);
-    this.atualizarBarra(this.bettaHp, this.bettaHpText, betta.hp, betta.maxHp);
-    this.scoreEl.textContent = `Pontos: ${score}`;
-    const { cadencia, dano, area } = tower.upgrades;
-    this.upgradesEl.textContent = `Cadência ${cadencia} · Dano ${dano} · Área ${area}`;
-  }
+    update({ tower, betta, score }) {
+        // Trava a vida em 0 para não aparecer números negativos
+        const towerHp = Math.max(0, Math.floor(tower.hp));
+        const bettaHp = Math.max(0, Math.floor(betta.hp));
+        
+        // Pega os status dinâmicos caso existam na sua arma
+        let armaInfo = "";
+        if (betta.gun) {
+            armaInfo = `<div style="font-size: 18px; margin-top: 10px; color: #ffeb3b;">
+                Cadência: ${betta.gun.fireRate || 0} | Dano: ${betta.gun.damage || 0}
+            </div>`;
+        }
 
-  atualizarBarra(fill, text, hp, maxHp) {
-    fill.style.width = `${Math.max(0, hp / maxHp) * 100}%`;
-    text.textContent = `${Math.ceil(hp)}/${maxHp}`;
-  }
+        // Atualiza SÓ os textos da HUD no canto esquerdo
+        this.hudElement.innerHTML = `
+            <div>Titanic: ${towerHp} / ${tower.maxHp || 400}</div>
+            <div>Betta: ${bettaHp} / ${betta.maxHp || 100}</div>
+            <div>Pontos: ${Math.floor(score)}</div>
+            ${armaInfo}
+        `;
+    }
 
-  showToast(message) {
-    this.toastEl.textContent = message;
-    this.toastEl.classList.add('visible');
-    clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => this.toastEl.classList.remove('visible'), 1400);
-  }
+    mostrarGameOver(mensagem, score, callbackReiniciar) {
+        this.hudElement.style.display = 'none'; 
+        
+        // 2. Mostra a tela cheia escura de Game Over
+        this.gameOverScreen.style.display = 'flex'; 
+        
+        // 3. Procura se já criámos o texto da pontuação antes. Se não, cria agora.
+        let painelPontuacao = document.getElementById('painel-pontuacao');
+        if (!painelPontuacao) {
+            painelPontuacao = document.createElement('div');
+            painelPontuacao.id = 'painel-pontuacao';
+            painelPontuacao.style.textAlign = 'center';
+            painelPontuacao.style.marginBottom = '30px';
+            // Insere a pontuação logo antes do botão de reiniciar
+            this.gameOverScreen.insertBefore(painelPontuacao, this.restartBtn);
+        }
 
-  mostrarGameOver(reason, score, onRestart) {
-    this.reasonEl.textContent = reason;
-    this.finalScoreEl.textContent = `Pontuação final: ${score}`;
-    this.gameOverEl.classList.remove('hidden');
-    this.restartBtn.onclick = () => {
-      this.gameOverEl.classList.add('hidden');
-      onRestart();
-    };
-  }
+        painelPontuacao.innerHTML = `
+            <p style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">${mensagem}</p>
+            <p style="font-size: 2.5rem; color: #ffeb3b; font-weight: bold; margin: 0;">Pontuação Final: ${Math.floor(score)}</p>
+        `;
+        
+        // 5. Configura o botão Reiniciar
+        this.restartBtn.onclick = () => {
+            this.hudElement.style.display = 'block'; 
+            this.gameOverScreen.style.display = 'none'; 
+            if (callbackReiniciar) callbackReiniciar(); 
+        };
+    }
 
-  ocultar() {
-    this.gameOverEl.classList.add('hidden');
-  }
+    showToast(nomeDoPowerUp) {
+        // Efeito visual rápido quando o Betta coleta um PowerUp
+        const toast = document.createElement('div');
+        toast.innerText = "+ " + nomeDoPowerUp;
+        toast.style.position = 'absolute';
+        toast.style.left = '50%';
+        toast.style.top = '20%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.color = '#3498db';
+        toast.style.fontWeight = 'bold';
+        toast.style.fontSize = '24px';
+        toast.style.zIndex = '50';
+        toast.style.pointerEvents = 'none';
+        toast.style.textShadow = '2px 2px 0 #000';
+        toast.style.transition = 'all 1s ease-out';
+        
+        document.getElementById('game-container').appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.top = '10%';
+            toast.style.opacity = '0';
+        }, 50);
+
+        setTimeout(() => {
+            toast.remove();
+        }, 1050);
+    }
 }

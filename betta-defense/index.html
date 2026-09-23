@@ -1,15 +1,47 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Betta Defense</title>
-  <link rel="stylesheet" href="styles/main.css" />
-  <link rel="stylesheet" href="styles/hud.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Betta: Guardião do Titanic</title>
+    <link rel="stylesheet" href="styles/hud.css">
 </head>
 <body>
-  <canvas id="game-canvas"></canvas>
-  <div id="hud"></div>
-  <script type="module" src="src/main.js"></script>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- TELA INICIAL (MENU) -->
+        <div id="start-screen" class="overlay-screen">
+            <h1 class="game-title">Betta Deffence</h1>
+            <div class="menu-buttons">
+                <button id="btn-play" class="ui-btn">Jogar</button>
+                <button id="btn-credits" class="ui-btn">Créditos</button>
+            </div>
+        </div>
+
+        <!-- TELA DE CRÉDITOS -->
+        <div id="credits-screen" class="overlay-screen" style="display: none;">
+            <h1 class="game-title">Créditos</h1>
+            <div class="credits-content">
+                <p><strong>Desenvolvimento:</strong> ...</p>
+                <p><strong>Artes:</strong> ....</p>
+                <p><strong>Motor:</strong> WebGL 2</p>
+            </div>
+            <button id="btn-back" class="ui-btn">Voltar ao Menu</button>
+        </div>
+
+        <!-- HUD DO JOGO -->
+        <div id="hud" style="display: none;">
+            <div>HP: <span id="hp-value">100</span></div>
+            <div>Score: <span id="score-value">0</span></div>
+        </div>
+
+        <!-- TELA DE GAME OVER -->
+        <div id="game-over-screen" class="overlay-screen" style="display: none;">
+            <h1 class="game-title">Você foi Mogado!Sobrou nada pro betta!</h1>
+            <button id="restart-btn" class="ui-btn">Reiniciar</button>
+        </div>
+    </div>
+    <script type="module" src="src/main.js"></script>
 </body>
 </html>

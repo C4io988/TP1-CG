@@ -49,6 +49,10 @@ export class Game {
     this.reset();
   }
 
+  handleResize() {
+    this.ajustarTamanho();
+    }
+
   static async create(canvas) {
     const gl = canvas.getContext('webgl2');
     if (!gl) throw new Error('WebGL2 não suportado neste navegador');
@@ -69,7 +73,7 @@ export class Game {
     this.betta = new Betta({
       x: WORLD.width * 0.55,
       y: WORLD.height * 0.6,
-      gl: this.gl, // o Betta agora carrega várias texturas sozinho (uma por direção/estado)
+      gl: this.gl,
       projectileTexture: this.textures.bettaProjectile,
     });
 

@@ -1,112 +1,133 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.overlay-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 15, 30, 0.95);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+}
+
+.game-title {
+    font-size: 3rem;
+    margin-bottom: 40px;
+    text-shadow: 3px 3px 0 #000;
+    color: #4da6ff;
+    text-align: center;
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ui-btn {
+    padding: 15px 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: inherit;
+    color: white;
+    background-color: #2c3e50;
+    border: 2px solid #34495e;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ui-btn:hover {
+    background-color: #3498db;
+    border-color: #2980b9;
+    transform: scale(1.05);
+}
+
+.credits-content {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    text-align: center;
+    line-height: 1.8;
+    font-size: 1.2rem;
+}
+
+/* Container principal da HUD de Status */
 #hud {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  color: #fff;
-  font-family: system-ui, sans-serif;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 22px;
+    font-weight: bold;
+    /* Borda preta forte para o texto não sumir no fundo claro */
+    text-shadow: 2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000, 1px 1px 0px #000;
+    z-index: 10;
+    pointer-events: none; /* Garante que você consiga clicar nos inimigos que passarem por baixo do texto */
+    line-height: 1.5;
 }
 
-.hud-panel {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  width: min(430px, calc(100vw - 32px));
-  padding: 14px;
-  background: rgba(5, 18, 35, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
+/* Overlay da Tela de Game Over */
+#game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 15, 30, 0.85); /* Fundo escuro transparente */
+    display: none; /* Controlado pelo JS (flex para mostrar, none para esconder) */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100; /* Fica acima do HUD e do Canvas */
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
 }
 
-.bar-row {
-  display: grid;
-  grid-template-columns: 70px 1fr 70px;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+#game-over-screen h1 {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    text-shadow: 4px 4px 0px #000;
 }
 
-.bar-label, .bar-value {
-  font-size: 13px;
-  font-weight: 700;
+#game-over-screen button {
+    padding: 15px 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #2c3e50;
+    color: white;
+    border: 2px solid #34495e;
+    border-radius: 8px;
 }
 
-.bar-value {
-  text-align: right;
-}
-
-.hp-track {
-  width: 100%;
-  height: 16px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid #fff;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.hp-fill {
-  height: 100%;
-  width: 100%;
-  background: #ff5252;
-  transition: width 0.15s ease-out;
-}
-
-.hp-fill.tower { background: #d6b15e; }
-.hp-fill.betta { background: #ff7043; }
-
-.score {
-  color: #fff;
-  font-size: 18px;
-  font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-
-.upgrades {
-  margin-top: 8px;
-  color: #bce8ff;
-  font-size: 13px;
-}
-
-.toast {
-  position: absolute;
-  top: 150px;
-  left: 16px;
-  padding: 8px 12px;
-  background: rgba(20, 115, 145, 0.9);
-  border-radius: 4px;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-.toast.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.game-over {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  pointer-events: all;
-}
-
-.game-over.hidden {
-  display: none;
-}
-
-.game-over button {
-  padding: 10px 24px;
-  font-size: 16px;
-  cursor: pointer;
-  border: none;
-  border-radius: 6px;
-  background: #ff8040;
-  color: #1a0a00;
-  font-weight: bold;
+#game-over-screen button:hover {
+    background-color: #3498db;
 }
