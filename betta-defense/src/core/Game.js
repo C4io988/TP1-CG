@@ -26,8 +26,11 @@ export class Game {
     this.hud = new Hud();
 
     this.textures = {
-      tower: Texture.fromColor(gl, [150, 150, 165, 255]),
+      chao: Texture.fromImage(gl, 'assets/images/cenario/chao.png'),
+      tower: Texture.fromImage(gl, 'assets/images/titanic/titanic.jpg'),
       betta: Texture.fromColor(gl, [255, 110, 50, 255]),
+      bettaProjectile: Texture.fromColor(gl, [255, 240, 120, 255]),
+      towerProjectile: Texture.fromColor(gl, [255, 245, 200, 255]),
       strike: Texture.fromColor(gl, [255, 255, 255, 255]),
     };
     this.powerupTextures = {};
@@ -61,11 +64,13 @@ export class Game {
       x: WORLD.width - 170,
       y: 215,
       texture: this.textures.tower,
+      projectileTexture: this.textures.towerProjectile,
     });
     this.betta = new Betta({
       x: WORLD.width * 0.55,
       y: WORLD.height * 0.6,
-      texture: this.textures.betta,
+      gl: this.gl, // o Betta agora carrega várias texturas sozinho (uma por direção/estado)
+      projectileTexture: this.textures.bettaProjectile,
     });
 
     this.enemies = [];
@@ -186,6 +191,13 @@ export class Game {
 
   render() {
     this.renderer.clear();
+    this.renderer.desenharQuad(
+      WORLD.width / 2,
+      WORLD.height / 2,
+      WORLD.width,
+      WORLD.height,
+      this.textures.chao,
+    );
     this.renderer.desenharSprite(this.tower);
     for (const powerup of this.powerups) this.renderer.desenharSprite(powerup);
     this.renderer.desenharSprite(this.betta);

@@ -11,6 +11,8 @@ export class Shader {
       model: gl.getUniformLocation(this.program, 'u_model'),
       texture: gl.getUniformLocation(this.program, 'u_texture'),
       tint: gl.getUniformLocation(this.program, 'u_tint'),
+      uvOffset: gl.getUniformLocation(this.program, 'u_uvOffset'),
+      uvScale: gl.getUniformLocation(this.program, 'u_uvScale'),
     };
   }
 

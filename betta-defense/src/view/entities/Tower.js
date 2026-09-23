@@ -2,22 +2,23 @@ import { Entity } from './Entity.js';
 import { Projectile } from './Projetil.js';
 import { Texture } from '../../rendering/Texture.js';
 
-const RANGE = 650;          // alcance do tiro automático
+const RANGE = 420;          // alcance do tiro automático
 const STRIKE_COOLDOWN = 0.9; // tempo entre golpes em área (clique)
 
 export class Tower extends Entity {
-  constructor({ x, y, texture }) {
+  constructor({ x, y, texture, projectileTexture, gl }) {
     super({ x, y, texture, hp: 400 });
 
     // Titanic
-    this.width = 300;
-    this.height = 420;
-    this.radius = 165;
+    this.width = 760;
+    this.height = 480;
+    this.radius = 185;
 
     // Stats melhoráveis por power-up
     this.fireRate = 0.6;
     this.damage = 14;
     this.projectileSpeed = 620;
+    this.projectileTexture = projectileTexture ?? Texture.fromColor(gl, [255, 245, 200, 255]);
     this.strikeRadius = 90;
     this.strikeDamage = 18;
 
@@ -69,7 +70,7 @@ export class Tower extends Entity {
     return new Projectile({
       x: this.x,
       y: this.y,
-      texture: Texture.fromColor(gl, [255, 245, 200, 255]),
+      texture: this.projectileTexture,
       dirX: dx / dist,
       dirY: dy / dist,
       speed: this.projectileSpeed,

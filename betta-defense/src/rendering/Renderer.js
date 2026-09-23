@@ -1,14 +1,22 @@
 import { Shader } from './Shader.js';
 
+// usado quando a entidade não define um recorte específico —
+// desenha a textura inteira, do jeito que sempre funcionou
+const UV_PADRAO = { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 };
+
 export class Renderer {
   constructor(gl, shader, camera) {
     this.gl = gl;
     this.shader = shader;
     this.camera = camera;
     this.quadVao = createQuadVao(gl, shader);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   static async create(gl, camera) {
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
     const shader = await Shader.loadFromFiles(gl, 'shaders/sprite.vert', 'shaders/sprite.frag');
     return new Renderer(gl, shader, camera);
   }
@@ -37,10 +45,11 @@ export class Renderer {
 
     const width = entity.width ?? entity.size ?? 32;
     const height = entity.height ?? entity.size ?? 32;
-    this.desenharQuad(entity.x, entity.y, width, height, entity.texture, entity.tint);
+    // entity.uv é opcional: só entidades animadas (como o Betta) definem isso
+    this.desenharQuad(entity.x, entity.y, width, height, entity.texture, entity.tint, entity.uv);
   }
 
-  desenharQuad(x, y, width, height, texture, tint = [1, 1, 1, 1]) {
+  desenharQuad(x, y, width, height, texture, tint = [1, 1, 1, 1], uv = UV_PADRAO) {
     const gl = this.gl;
     const { shader, camera } = this;
     shader.use();
@@ -48,6 +57,8 @@ export class Renderer {
     gl.uniformMatrix4fv(shader.uniformLocations.projection, false, camera.projectionMatrix);
     gl.uniformMatrix4fv(shader.uniformLocations.model, false, matrizDoModelo(x, y, width, height));
     gl.uniform4fv(shader.uniformLocations.tint, tint);
+    gl.uniform2f(shader.uniformLocations.uvOffset, uv.offsetX, uv.offsetY);
+    gl.uniform2f(shader.uniformLocations.uvScale, uv.scaleX, uv.scaleY);
     texture.bind(0);
     gl.uniform1i(shader.uniformLocations.texture, 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);

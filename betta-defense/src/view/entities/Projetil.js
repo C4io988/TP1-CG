@@ -3,10 +3,10 @@ import { Entity } from './Entity.js';
 const LIFETIME = 2; // segundos até o projétil expirar sozinho
 
 export class Projectile extends Entity {
-  constructor({ x, y, texture, dirX, dirY, speed, damage }) {
+  constructor({ x, y, texture, dirX, dirY, speed, damage, size = 10 }) {
     super({ x, y, texture, hp: 1 });
-    this.size = 10;
-    this.radius = 5;
+    this.size = size;
+    this.radius = size / 2;
     this.dirX = dirX;
     this.dirY = dirY;
     this.speed = speed;

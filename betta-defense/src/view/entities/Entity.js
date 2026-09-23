@@ -14,7 +14,7 @@ export class Entity {
   }
 
   get tint() {
-    return this.hitFlash > 0 ? [2.2, 2.2, 2.2, 1] : [1, 1, 1, 1];
+    return [1, 1, 1, 1];
   }
 
   render(renderer) {
