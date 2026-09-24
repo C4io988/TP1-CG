@@ -10,8 +10,9 @@ export class Tower extends Entity {
     super({ x, y, texture, hp: 400 });
 
     // Titanic
-    this.width = 760;
-    this.height = 480;
+    this.width = 420;
+    this.height = 470;
+    this.uv = { offsetX: 0, offsetY: 0.5, scaleX: 0.25, scaleY: 0.5 };
     this.radius = 185;
 
     // Stats melhoráveis por power-up

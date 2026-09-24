@@ -23,14 +23,8 @@ export class Renderer {
 
   clear() {
     const gl = this.gl;
-    const camera = this.camera;
     gl.disable(gl.SCISSOR_TEST);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.viewport(camera.offsetX, camera.offsetY, camera.largura, camera.altura);
-    gl.enable(gl.SCISSOR_TEST);
-    gl.scissor(camera.offsetX, camera.offsetY, camera.largura, camera.altura);
     gl.clearColor(0.03, 0.09, 0.17, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
   }

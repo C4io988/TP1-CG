@@ -9,17 +9,14 @@ export class Camera {
   }
 
   resize(width, height) {
-    this.escala = Math.min(width / LARGURA_DO_MUNDO, height / ALTURA_DO_MUNDO);
-    this.largura = LARGURA_DO_MUNDO * this.escala;
-    this.altura = ALTURA_DO_MUNDO * this.escala;
-    this.offsetX = (width - this.largura) / 2;
-    this.offsetY = (height - this.altura) / 2;
+    this.escalaX = Math.max(1, width) / LARGURA_DO_MUNDO;
+    this.escalaY = Math.max(1, height) / ALTURA_DO_MUNDO;
   }
 
   telaParaMundo(x, y) {
     return {
-      x: (x - this.offsetX) / this.escala,
-      y: (y - this.offsetY) / this.escala,
+      x: x / this.escalaX,
+      y: y / this.escalaY,
     };
   }
 }

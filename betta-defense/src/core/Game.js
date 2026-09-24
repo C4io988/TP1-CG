@@ -26,8 +26,8 @@ export class Game {
     this.hud = new Hud();
 
     this.textures = {
-      chao: Texture.fromImage(gl, 'assets/images/cenario/chao.png'),
-      tower: Texture.fromImage(gl, 'assets/images/titanic/titanic.jpg'),
+      chao: Texture.fromImage(gl, 'assets/images/cenario/mapa.png'),
+      tower: Texture.fromImage(gl, 'assets/images/titanic/titanic_sprite_sheet.png'),
       betta: Texture.fromColor(gl, [255, 110, 50, 255]),
       bettaProjectile: Texture.fromColor(gl, [255, 240, 120, 255]),
       towerProjectile: Texture.fromColor(gl, [255, 245, 200, 255]),
@@ -65,8 +65,8 @@ export class Game {
 
   reset() {
     this.tower = new Tower({
-      x: WORLD.width - 170,
-      y: 215,
+      x: WORLD.width - 225,
+      y: 240,
       texture: this.textures.tower,
       projectileTexture: this.textures.towerProjectile,
     });

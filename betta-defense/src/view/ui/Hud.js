@@ -1,8 +1,31 @@
+// Limites reais dos desenhos na imagem (os quadros não têm largura igual).
+const BETTA_FRAMES = [[21, 410, 221, 102], [242, 410, 211, 101], [454, 413, 202, 97], [656, 413, 198, 97], [858, 415, 196, 93], [1056, 417, 197, 90], [1257, 416, 196, 91], [1454, 415, 198, 92]];
+const TITANIC_FRAMES = [[13, 412, 210, 119], [224, 411, 207, 120], [431, 411, 207, 120], [641, 412, 202, 119], [847, 412, 203, 119], [1053, 411, 205, 120], [1260, 412, 201, 121], [1465, 412, 199, 121]];
+
 export class Hud {
     constructor() {
         this.hudElement = document.getElementById('hud');
+        this.scoreValue = document.getElementById('score-value');
+        this.bettaLifeArt = document.getElementById('betta-life-art');
+        this.towerLifeArt = document.getElementById('tower-life-art');
+        this.bettaLifeContext = this.bettaLifeArt.getContext('2d');
+        this.towerLifeContext = this.towerLifeArt.getContext('2d');
+        this.bettaLifeImage = new Image();
+        this.bettaLifeImage.src = 'assets/images/betta/hud_vida_betta.png';
+        this.towerLifeImage = new Image();
+        this.towerLifeImage.src = 'assets/images/titanic/hud_vida_titanic.png';
+        this.scoreArt = document.getElementById('score-art');
+        this.scoreContext = this.scoreArt.getContext('2d');
+        this.scoreImage = new Image();
+        this.scoreImage.onload = () => {
+            this.scoreContext.imageSmoothingEnabled = false;
+            this.scoreContext.drawImage(this.scoreImage, 21, 360, 265, 209, 5, 6, 110, 87);
+            // Cobre a estrela do primeiro quadro com a mesma área de um quadro sem brilho.
+            this.scoreContext.drawImage(this.scoreImage, 1172, 380, 55, 58, 29, 14, 23, 24);
+        };
+        this.scoreImage.src = 'assets/images/hud_score.png';
         this.gameOverScreen = document.getElementById('game-over-screen');
-        this.gameOverText = this.gameOverScreen.querySelector('h1');
+        this.gameOverMessage = document.getElementById('game-over-message');
         this.restartBtn = document.getElementById('restart-btn');
     }
 
@@ -11,25 +34,44 @@ export class Hud {
     }
 
     update({ tower, betta, score }) {
-        // Trava a vida em 0 para não aparecer números negativos
-        const towerHp = Math.max(0, Math.floor(tower.hp));
         const bettaHp = Math.max(0, Math.floor(betta.hp));
-        
-        // Pega os status dinâmicos caso existam na sua arma
-        let armaInfo = "";
-        if (betta.gun) {
-            armaInfo = `<div style="font-size: 18px; margin-top: 10px; color: #ffeb3b;">
-                Cadência: ${betta.gun.fireRate || 0} | Dano: ${betta.gun.damage || 0}
-            </div>`;
-        }
+        const bettaMaxHp = betta.maxHp || 100;
+        const towerHp = Math.max(0, Math.floor(tower.hp));
+        const towerMaxHp = tower.maxHp || 400;
 
-        // Atualiza SÓ os textos da HUD no canto esquerdo
-        this.hudElement.innerHTML = `
-            <div>Titanic: ${towerHp} / ${tower.maxHp || 400}</div>
-            <div>Betta: ${bettaHp} / ${betta.maxHp || 100}</div>
-            <div>Pontos: ${Math.floor(score)}</div>
-            ${armaInfo}
-        `;
+        this.scoreValue.textContent = Math.floor(score).toLocaleString('pt-BR');
+        this.atualizarArteVidaBetta(bettaHp, bettaMaxHp);
+        this.atualizarArteVidaTitanic(towerHp, towerMaxHp);
+    }
+
+    atualizarArteVidaTitanic(hp, maxHp) {
+        this.atualizarArteVida(this.towerLifeArt, this.towerLifeContext, this.towerLifeImage, hp, maxHp);
+    }
+
+    atualizarArteVidaBetta(hp, maxHp) {
+        this.atualizarArteVida(this.bettaLifeArt, this.bettaLifeContext, this.bettaLifeImage, hp, maxHp);
+    }
+
+    atualizarArteVida(arte, contexto, imagem, hp, maxHp) {
+        if (!imagem.complete || imagem.naturalWidth === 0) return;
+
+        const proporcao = maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 0;
+        const quadro = hp === 0 ? 7 : Math.min(6, Math.floor((1 - proporcao) * 7));
+        const personagem = arte === this.bettaLifeArt ? 'do Betta' : 'do Titanic';
+        arte.setAttribute('aria-label', `Vida ${personagem}: ${hp} de ${maxHp}`);
+        if (arte.dataset.lifeFrame === String(quadro)) return;
+
+        const betta = arte === this.bettaLifeArt;
+        const [x, y, largura, altura] = (betta ? BETTA_FRAMES : TITANIC_FRAMES)[quadro];
+
+        contexto.clearRect(0, 0, arte.width, arte.height);
+        contexto.imageSmoothingEnabled = false;
+        contexto.drawImage(
+            imagem,
+            x, y, largura, altura,
+            2, betta ? 14 : 5, 156, betta ? 72 : 89,
+        );
+        arte.dataset.lifeFrame = String(quadro);
     }
 
     mostrarGameOver(mensagem, score, callbackReiniciar) {
@@ -49,14 +91,12 @@ export class Hud {
             this.gameOverScreen.insertBefore(painelPontuacao, this.restartBtn);
         }
 
-        painelPontuacao.innerHTML = `
-            <p style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">${mensagem}</p>
-            <p style="font-size: 2.5rem; color: #ffeb3b; font-weight: bold; margin: 0;">Pontuação Final: ${Math.floor(score)}</p>
-        `;
+        this.gameOverMessage.textContent = mensagem;
+        painelPontuacao.textContent = `Pontuação final: ${Math.floor(score).toLocaleString('pt-BR')}`;
         
         // 5. Configura o botão Reiniciar
         this.restartBtn.onclick = () => {
-            this.hudElement.style.display = 'block'; 
+            this.hudElement.style.display = 'flex';
             this.gameOverScreen.style.display = 'none'; 
             if (callbackReiniciar) callbackReiniciar(); 
         };

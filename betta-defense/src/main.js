@@ -19,7 +19,7 @@ window.onload = async () => {
     // Navegação do Menu
     btnPlay.addEventListener('click', () => {
         startScreen.style.display = 'none';
-        hud.style.display = 'block';
+        hud.style.display = 'flex';
         game.start(); // O WebGL só começa a renderizar e calcular o loop aqui
     });
 

@@ -12,7 +12,7 @@
         
         <!-- TELA INICIAL (MENU) -->
         <div id="start-screen" class="overlay-screen">
-            <h1 class="game-title">Betta Deffence</h1>
+            <h1 class="game-title">Betta Defense</h1>
             <div class="menu-buttons">
                 <button id="btn-play" class="ui-btn">Jogar</button>
                 <button id="btn-credits" class="ui-btn">Créditos</button>
@@ -32,13 +32,20 @@
 
         <!-- HUD DO JOGO -->
         <div id="hud" style="display: none;">
-            <div>HP: <span id="hp-value">100</span></div>
-            <div>Score: <span id="score-value">0</span></div>
+            <canvas id="betta-life-art" class="hud-life-art" width="160" height="100" role="img"
+                    aria-label="Vida do Betta: 100 de 100"></canvas>
+            <canvas id="tower-life-art" class="hud-life-art" width="160" height="100" role="img"
+                    aria-label="Vida do Titanic: 400 de 400"></canvas>
+            <div class="hud-score-art" role="group" aria-label="Pontuação do jogador">
+                <canvas id="score-art" width="120" height="100" aria-hidden="true"></canvas>
+                <span id="score-value" class="hud-score-value">0</span>
+            </div>
         </div>
 
         <!-- TELA DE GAME OVER -->
         <div id="game-over-screen" class="overlay-screen" style="display: none;">
-            <h1 class="game-title">Você foi Mogado!Sobrou nada pro betta!</h1>
+            <h1 class="game-title">Fim de jogo</h1>
+            <p id="game-over-message" class="game-over-message"></p>
             <button id="restart-btn" class="ui-btn">Reiniciar</button>
         </div>
     </div>
