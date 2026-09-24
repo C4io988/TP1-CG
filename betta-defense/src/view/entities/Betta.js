@@ -33,7 +33,7 @@ export class Betta extends Entity {
     this.height = 53;
     this.radius = 20;
     this.speed = SPEED;
-    this.weapon = WEAPONS.pistola;
+    this.weapon = WEAPONS.arpao;
     this.projectileTexture = projectileTexture ?? Texture.fromColor(gl, [255, 240, 120, 255]);
     this.fireCooldown = 0;
     this.currentTarget = null;
