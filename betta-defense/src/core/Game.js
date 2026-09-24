@@ -13,6 +13,35 @@ import { POWERUP_TYPES } from '../view/data/powerups.js';
 
 const WORLD = { width: LARGURA_DO_MUNDO, height: ALTURA_DO_MUNDO };
 
+function recorteUV(x, y, largura, altura, larguraFolha, alturaFolha) {
+  return {
+    offsetX: (x + 0.5) / larguraFolha,
+    offsetY: 1 - (y + altura - 0.5) / alturaFolha,
+    scaleX: (largura - 1) / larguraFolha,
+    scaleY: (altura - 1) / alturaFolha,
+  };
+}
+
+// Três tipos de alga (uma linha cada) e seis quadros do gerador de bolhas.
+const QUADROS_ALGAS = [[70, 255], [374, 218], [653, 196]].map(([y, altura]) =>
+  Array.from({ length: 6 }, (_, i) => recorteUV(i * 296, y, 296, altura, 1776, 888)));
+const QUADROS_GERADOR = Array.from({ length: 6 }, (_, i) =>
+  recorteUV(i * 362, 256, 362, 380, 2172, 724));
+const QUADROS_PEIXES = [[142, 112], [397, 103], [682, 72]].map(([y, altura]) =>
+  Array.from({ length: 6 }, (_, i) => recorteUV(i * 296 + 60, y, 210, altura, 1776, 888)));
+const INTERVALO_PEIXES = 30;
+const DURACAO_PEIXES = 8;
+
+// baseY é o ponto em que cada decoração encosta no chão do mapa.
+const DECORACOES_CENARIO = [
+  { x: 365, baseY: 655, largura: 108, altura: 110, textura: 'algas', quadros: QUADROS_ALGAS[0], intervalo: 0.28, fase: 0 },
+  { x: 800, baseY: 775, largura: 108, altura: 72, textura: 'algas', quadros: QUADROS_ALGAS[2], intervalo: 0.31, fase: 2 },
+  { x: 1265, baseY: 675, largura: 110, altura: 82, textura: 'algas', quadros: QUADROS_ALGAS[1], intervalo: 0.26, fase: 4 },
+  { x: 500, baseY: 720, largura: 94, altura: 102, textura: 'geradorBolhas', quadros: QUADROS_GERADOR, intervalo: 0.17, fase: 0 },
+  { x: 925, baseY: 710, largura: 94, altura: 102, textura: 'geradorBolhas', quadros: QUADROS_GERADOR, intervalo: 0.19, fase: 2 },
+  { x: 1180, baseY: 685, largura: 94, altura: 102, textura: 'geradorBolhas', quadros: QUADROS_GERADOR, intervalo: 0.16, fase: 4 },
+];
+
 export class Game {
   constructor(canvas, gl, renderer, camera) {
     this.canvas = canvas;
@@ -26,13 +55,18 @@ export class Game {
     this.hud = new Hud();
 
     this.textures = {
-      chao: Texture.fromImage(gl, 'assets/images/cenario/chao.png'),
-      tower: Texture.fromImage(gl, 'assets/images/titanic/titanic.jpg'),
+      chao: Texture.fromImage(gl, 'assets/images/cenario/mapa_base_estatica.png'),
+      algas: Texture.fromImage(gl, 'assets/images/cenario/algas_animacao_sheet.png', { pixelated: true }),
+      geradorBolhas: Texture.fromImage(gl, 'assets/images/cenario/gerador_bolhas_animacao_sheet.png', { pixelated: true }),
+      peixesFundo: Texture.fromImage(gl, 'assets/images/cenario/peixes_fundo_animacao_sheet.png', { pixelated: true }),
+      tower: Texture.fromImage(gl, 'assets/images/titanic/titanic_sprite_sheet.png'),
+      gun: Texture.fromImage(gl, 'assets/images/titanic/atirador_arpao_sheet.png', { pixelated: true }),
       betta: Texture.fromColor(gl, [255, 110, 50, 255]),
       bettaProjectile: Texture.fromColor(gl, [255, 240, 120, 255]),
-      towerProjectile: Texture.fromColor(gl, [255, 245, 200, 255]),
+      towerProjectile: Texture.fromImage(gl, 'assets/images/titanic/arpao_animacao_sheet.png', { pixelated: true }),
       strike: Texture.fromColor(gl, [255, 255, 255, 255]),
     };
+    this.texturasBetta = Betta.carregarTexturas(gl);
     this.powerupTextures = {};
     for (const [key, config] of Object.entries(POWERUP_TYPES)) {
       this.powerupTextures[key] = Texture.fromColor(gl, config.color);
@@ -65,15 +99,17 @@ export class Game {
 
   reset() {
     this.tower = new Tower({
-      x: WORLD.width - 170,
+      x: WORLD.width - 260,
       y: 215,
       texture: this.textures.tower,
       projectileTexture: this.textures.towerProjectile,
+      gunTexture: this.textures.gun,
     });
     this.betta = new Betta({
       x: WORLD.width * 0.55,
       y: WORLD.height * 0.6,
       gl: this.gl,
+      texturas: this.texturasBetta,
       projectileTexture: this.textures.bettaProjectile,
     });
 
@@ -202,12 +238,38 @@ export class Game {
       WORLD.height,
       this.textures.chao,
     );
-    this.renderer.desenharSprite(this.tower);
+    this.desenharPeixesFundo();
+    for (const decoracao of DECORACOES_CENARIO) {
+      const quadro = (Math.floor(this.elapsedTime / decoracao.intervalo) + decoracao.fase) % 6;
+      this.renderer.desenharQuad(
+        decoracao.x,
+        decoracao.baseY - decoracao.altura / 2,
+        decoracao.largura,
+        decoracao.altura,
+        this.textures[decoracao.textura],
+        [1, 1, 1, 0.9],
+        decoracao.quadros[quadro],
+      );
+    }
+    this.tower.render(this.renderer);
     for (const powerup of this.powerups) this.renderer.desenharSprite(powerup);
     this.renderer.desenharSprite(this.betta);
     for (const enemy of this.enemies) this.renderer.desenharSprite(enemy);
     for (const projectile of this.projectiles) this.renderer.desenharSprite(projectile);
     this.desenharGolpe();
+  }
+
+  desenharPeixesFundo() {
+    if (this.elapsedTime < INTERVALO_PEIXES) return;
+    const tempoNaPassagem = this.elapsedTime % INTERVALO_PEIXES;
+    if (tempoNaPassagem >= DURACAO_PEIXES) return;
+
+    const linha = (Math.floor(this.elapsedTime / INTERVALO_PEIXES) - 1) % QUADROS_PEIXES.length;
+    const quadro = Math.floor(tempoNaPassagem / 0.16) % 6;
+    const x = -130 + (WORLD.width + 260) * tempoNaPassagem / DURACAO_PEIXES;
+    const alturas = [105, 100, 75];
+    this.renderer.desenharQuad(x, 330, 200, alturas[linha], this.textures.peixesFundo,
+      [0.7, 0.8, 1, 0.75], QUADROS_PEIXES[linha][quadro]);
   }
 
   desenharGolpe() {
