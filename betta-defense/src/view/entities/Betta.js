@@ -6,21 +6,17 @@ import { WEAPONS } from '../data/Guns.js';
 
 const SPEED = 180; // pixels por segundo
 const ATTACK_RANGE = 250; // pixels
-const QUADROS_DO_NADO = 4;
+const QUADROS_DO_NADO = 8;
 const DURACAO_DO_QUADRO = 0.1; // segundos por quadro da animação de nado
 const QUADROS_NOVOS = 8;
 
 // caminho de cada sprite que o Betta pode usar, dependendo do estado
 const CAMINHOS_DOS_SPRITES = {
   parado: 'assets/images/betta/betta_parado_animacao.png',
-  paradoCima: 'assets/images/betta/betta_parado_cima.png',
-  paradoBaixo: 'assets/images/betta/betta_parado_baixo.png',
+  paradoVertical: 'assets/images/betta/betta_parado_vertical_animacao.png',
   nadoVertical: 'assets/images/betta/betta_nado_cima_animacao.png',
-  nadoDireita: 'assets/images/betta/betta_nado_direita_sheet.png',
-  nadoEsquerda: 'assets/images/betta/betta_nado_esquerda_sheet.png',
+  nadoHorizontal: 'assets/images/betta/betta_nado_horizontal_animacao.png',
 };
-
-const UV_TEXTURA_INTEIRA = { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 };
 
 // A folha do parado não tem células de largura igual: estes cortes seguem
 // as separações entre os peixes, sem puxar parte do quadro vizinho.
@@ -32,13 +28,25 @@ const UV_PARADO_DIREITA = CORTES_PARADO.map(([x, largura]) => uvRecorte(x, 499, 
 // Os quadros verticais têm espaço suficiente para manter um corte fixo;
 // assim a cauda pode balançar sem mudar o tamanho do Betta.
 const X_NADO_VERTICAL = [112, 534, 946, 1389];
-const UV_NADO_CIMA = [80, 485].flatMap(y =>
+const UV_VERTICAL_CIMA = [80, 485].flatMap(y =>
   X_NADO_VERTICAL.map(x => uvRecorte(x, y, 300, 350, 1774, 887)));
-const UV_NADO_BAIXO = UV_NADO_CIMA.map(uv => ({
+const UV_VERTICAL_BAIXO = UV_VERTICAL_CIMA.map(uv => ({
   offsetX: uv.offsetX,
   offsetY: uv.offsetY + uv.scaleY,
   scaleX: uv.scaleX,
   scaleY: -uv.scaleY,
+}));
+
+// O nado horizontal tem 4 quadros em cada linha. A margem superior
+// da imagem é vazia, então recortamos apenas a faixa dos peixes.
+const X_NADO_HORIZONTAL = [0, 362, 724, 1086];
+const UV_NADO_DIREITA = [[268, 282], [590, 280]].flatMap(([y, altura]) =>
+  X_NADO_HORIZONTAL.map(x => uvRecorte(x, y, 362, altura, 1448, 1086)));
+const UV_NADO_ESQUERDA = UV_NADO_DIREITA.map(uv => ({
+  offsetX: uv.offsetX + uv.scaleX,
+  offsetY: uv.offsetY,
+  scaleX: -uv.scaleX,
+  scaleY: uv.scaleY,
 }));
 
 function uvRecorte(x, y, largura, altura, larguraFolha, alturaFolha) {
@@ -53,11 +61,11 @@ function uvRecorte(x, y, largura, altura, larguraFolha, alturaFolha) {
 export class Betta extends Entity {
   // recebe gl (não mais texture pronta), porque agora ele mesmo carrega
   // várias texturas — uma pra cada direção/estado
-  constructor({ x, y, gl, projectileTexture }) {
-    const texturas = carregarTexturasDoBetta(gl);
-    super({ x, y, texture: texturas.parado, hp: 100 });
+  constructor({ x, y, gl, projectileTexture, texturas }) {
+    const sprites = texturas ?? carregarTexturasDoBetta(gl);
+    super({ x, y, texture: sprites.parado, hp: 100 });
 
-    this.texturas = texturas;
+    this.texturas = sprites;
     this.width = 74;
     this.height = 68;
     this.radius = 20;
@@ -75,6 +83,10 @@ export class Betta extends Entity {
     this.animacaoParado = new SpriteAnimation({ frameCount: QUADROS_NOVOS, frameDuration: 0.17 });
     this.animacaoVertical = new SpriteAnimation({ frameCount: QUADROS_NOVOS, frameDuration: 0.1 });
     this.uv = UV_PARADO_DIREITA[0];
+  }
+
+  static carregarTexturas(gl) {
+    return carregarTexturasDoBetta(gl);
   }
 
   update(dt, { input, enemies, bounds }) {
@@ -120,16 +132,17 @@ export class Betta extends Entity {
       this.animacaoParado.reset();
       this.animacaoVertical.reset();
       this.animacaoNado.update(dt);
-      this.texture = this.direcao === 'direita' ? this.texturas.nadoDireita : this.texturas.nadoEsquerda;
-      this.uv = this.animacaoNado.getUV();
+      this.texture = this.texturas.nadoHorizontal;
+      const quadros = this.direcao === 'direita' ? UV_NADO_DIREITA : UV_NADO_ESQUERDA;
+      this.uv = quadros[this.animacaoNado.currentFrame];
       this.width = 74;
-      this.height = 53;
+      this.height = 58;
     } else if (estaSeMovendo) {
       this.animacaoNado.reset();
       this.animacaoParado.reset();
       this.animacaoVertical.update(dt);
       this.texture = this.texturas.nadoVertical;
-      const quadros = this.direcao === 'cima' ? UV_NADO_CIMA : UV_NADO_BAIXO;
+      const quadros = this.direcao === 'cima' ? UV_VERTICAL_CIMA : UV_VERTICAL_BAIXO;
       this.uv = quadros[this.animacaoVertical.currentFrame];
       this.width = 53;
       this.height = 78;
@@ -144,11 +157,11 @@ export class Betta extends Entity {
       this.height = 68;
     } else {
       this.animacaoNado.reset();
-      this.animacaoParado.reset();
       this.animacaoVertical.reset();
-      const chave = 'parado' + this.direcao.charAt(0).toUpperCase() + this.direcao.slice(1);
-      this.texture = this.texturas[chave];
-      this.uv = UV_TEXTURA_INTEIRA;
+      this.animacaoParado.update(dt);
+      this.texture = this.texturas.paradoVertical;
+      const quadros = this.direcao === 'cima' ? UV_VERTICAL_CIMA : UV_VERTICAL_BAIXO;
+      this.uv = quadros[this.animacaoParado.currentFrame];
       this.width = 53;
       this.height = 78;
     }
@@ -195,10 +208,8 @@ export class Betta extends Entity {
 function carregarTexturasDoBetta(gl) {
   return {
     parado: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.parado, { pixelated: true }),
-    paradoCima: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.paradoCima),
-    paradoBaixo: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.paradoBaixo),
+    paradoVertical: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.paradoVertical, { pixelated: true }),
     nadoVertical: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.nadoVertical, { pixelated: true }),
-    nadoDireita: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.nadoDireita),
-    nadoEsquerda: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.nadoEsquerda),
+    nadoHorizontal: Texture.fromImage(gl, CAMINHOS_DOS_SPRITES.nadoHorizontal, { pixelated: true }),
   };
 }

@@ -115,11 +115,11 @@ canvas {
 
 .hud-score-value {
     position: absolute;
-    top: 72%;
-    left: 63%;
-    color: #e8f5ff;
-    font: 700 clamp(10px, 1.2vw, 13px)/1 monospace;
-    transform: translate(-50%, -50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 /* Overlay da Tela de Game Over */

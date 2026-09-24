@@ -1,6 +1,8 @@
 // Limites reais dos desenhos na imagem (os quadros não têm largura igual).
 const BETTA_FRAMES = [[21, 410, 221, 102], [242, 410, 211, 101], [454, 413, 202, 97], [656, 413, 198, 97], [858, 415, 196, 93], [1056, 417, 197, 90], [1257, 416, 196, 91], [1454, 415, 198, 92]];
 const TITANIC_FRAMES = [[13, 412, 210, 119], [224, 411, 207, 120], [431, 411, 207, 120], [641, 412, 202, 119], [847, 412, 203, 119], [1053, 411, 205, 120], [1260, 412, 201, 121], [1465, 412, 199, 121]];
+const SEGMENTOS_DIGITAIS = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
+const BARRAS_DIGITAIS = [[2, 0, 4, 2], [6, 2, 2, 5], [6, 9, 2, 5], [2, 14, 4, 2], [0, 9, 2, 5], [0, 2, 2, 5], [2, 7, 4, 2]];
 
 export class Hud {
     constructor() {
@@ -16,13 +18,9 @@ export class Hud {
         this.towerLifeImage.src = 'assets/images/titanic/hud_vida_titanic.png';
         this.scoreArt = document.getElementById('score-art');
         this.scoreContext = this.scoreArt.getContext('2d');
+        this.scoreAtual = 0;
         this.scoreImage = new Image();
-        this.scoreImage.onload = () => {
-            this.scoreContext.imageSmoothingEnabled = false;
-            this.scoreContext.drawImage(this.scoreImage, 21, 360, 265, 209, 5, 6, 110, 87);
-            // Cobre a estrela do primeiro quadro com a mesma área de um quadro sem brilho.
-            this.scoreContext.drawImage(this.scoreImage, 1172, 380, 55, 58, 29, 14, 23, 24);
-        };
+        this.scoreImage.onload = () => this.desenharScore();
         this.scoreImage.src = 'assets/images/hud_score.png';
         this.gameOverScreen = document.getElementById('game-over-screen');
         this.gameOverMessage = document.getElementById('game-over-message');
@@ -39,9 +37,44 @@ export class Hud {
         const towerHp = Math.max(0, Math.floor(tower.hp));
         const towerMaxHp = tower.maxHp || 400;
 
-        this.scoreValue.textContent = Math.floor(score).toLocaleString('pt-BR');
+        const pontuacao = Math.max(0, Math.floor(score));
+        this.scoreValue.textContent = pontuacao.toLocaleString('pt-BR');
+        if (this.scoreAtual !== pontuacao) {
+            this.scoreAtual = pontuacao;
+            this.desenharScore();
+        }
         this.atualizarArteVidaBetta(bettaHp, bettaMaxHp);
         this.atualizarArteVidaTitanic(towerHp, towerMaxHp);
+    }
+
+    desenharScore() {
+        if (!this.scoreImage.complete || this.scoreImage.naturalWidth === 0) return;
+
+        const contexto = this.scoreContext;
+        contexto.clearRect(0, 0, this.scoreArt.width, this.scoreArt.height);
+        contexto.imageSmoothingEnabled = false;
+        contexto.drawImage(this.scoreImage, 21, 360, 265, 209, 5, 6, 110, 87);
+        // Cobre a estrela do primeiro quadro com a mesma área de um quadro sem brilho.
+        contexto.drawImage(this.scoreImage, 1172, 380, 55, 58, 29, 14, 23, 24);
+
+        const digitos = String(this.scoreAtual);
+        const largura = digitos.length * 10 - 2;
+        const escala = Math.min(1, 62 / largura);
+        contexto.save();
+        contexto.translate(70 - largura * escala / 2, 61);
+        contexto.scale(escala, escala);
+        contexto.fillStyle = '#d7f4ff';
+        contexto.shadowColor = '#7bc8ff';
+        contexto.shadowBlur = 2;
+        for (let i = 0; i < digitos.length; i++) {
+            const acesos = SEGMENTOS_DIGITAIS[Number(digitos[i])];
+            for (let barra = 0; barra < 7; barra++) {
+                if (!acesos.includes('abcdefg'[barra])) continue;
+                const [x, y, larguraBarra, alturaBarra] = BARRAS_DIGITAIS[barra];
+                contexto.fillRect(i * 10 + x, y, larguraBarra, alturaBarra);
+            }
+        }
+        contexto.restore();
     }
 
     atualizarArteVidaTitanic(hp, maxHp) {

@@ -1,7 +1,6 @@
 import { Shader } from './Shader.js';
 
-// usado quando a entidade não define um recorte específico —
-// desenha a textura inteira, do jeito que sempre funcionou
+// usado quando a entidade não define um recorte específico
 const UV_PADRAO = { offsetX: 0, offsetY: 0, scaleX: 1, scaleY: 1 };
 
 export class Renderer {
@@ -29,7 +28,7 @@ export class Renderer {
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
-  // Desenha uma entidade como um quad texturizado, centralizado em (x, y)
+  // Desenha uma entidade centralizado em (x, y)
   desenharSprite(entity) {
     const gl = this.gl;
     const { shader, camera } = this;
@@ -39,17 +38,18 @@ export class Renderer {
 
     const width = entity.width ?? entity.size ?? 32;
     const height = entity.height ?? entity.size ?? 32;
-    // entity.uv é opcional: só entidades animadas (como o Betta) definem isso
-    this.desenharQuad(entity.x, entity.y, width, height, entity.texture, entity.tint, entity.uv);
+
+    this.desenharQuad(entity.x, entity.y, width, height, entity.texture, entity.tint, entity.uv,
+      entity.rotation ?? 0);
   }
 
-  desenharQuad(x, y, width, height, texture, tint = [1, 1, 1, 1], uv = UV_PADRAO) {
+  desenharQuad(x, y, width, height, texture, tint = [1, 1, 1, 1], uv = UV_PADRAO, rotation = 0) {
     const gl = this.gl;
     const { shader, camera } = this;
     shader.use();
     gl.bindVertexArray(this.quadVao);
     gl.uniformMatrix4fv(shader.uniformLocations.projection, false, camera.projectionMatrix);
-    gl.uniformMatrix4fv(shader.uniformLocations.model, false, matrizDoModelo(x, y, width, height));
+    gl.uniformMatrix4fv(shader.uniformLocations.model, false, matrizDoModelo(x, y, width, height, rotation));
     gl.uniform4fv(shader.uniformLocations.tint, tint);
     gl.uniform2f(shader.uniformLocations.uvOffset, uv.offsetX, uv.offsetY);
     gl.uniform2f(shader.uniformLocations.uvScale, uv.scaleX, uv.scaleY);
@@ -94,11 +94,13 @@ function createQuadVao(gl, shader) {
   return vao;
 }
 
-// Translação + escala
-function matrizDoModelo(x, y, width, height) {
+// Translação, escala e rotação em torno do centro
+function matrizDoModelo(x, y, width, height, rotation) {
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
   return new Float32Array([
-    width, 0, 0, 0,
-    0, height, 0, 0,
+    width * cos, width * sin, 0, 0,
+    -height * sin, height * cos, 0, 0,
     0, 0, 1, 0,
     x, y, 0, 1,
   ]);

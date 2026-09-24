@@ -32,7 +32,7 @@ export class SpawnManager {
     const type = this.enemyTypes[typeKey];
 
     const { x, y } = this.SpawnRandonMobs(world, type.size);
-    const texture = this.getTexture(gl, typeKey, type.cor);
+    const texture = this.getTexture(gl, typeKey, type);
 
     return new Enemy({ x, y, texture, type, typeKey });
   }
@@ -74,9 +74,12 @@ export class SpawnManager {
 */
 
   // Evita recriar uma textura por inimigo spawnado
-  getTexture(gl, typeKey, color) {
+  getTexture(gl, typeKey, type) {
     if (!this.textureCache.has(typeKey)) {
-      this.textureCache.set(typeKey, Texture.fromColor(gl, color));
+      const texture = type.imagem
+        ? Texture.fromImage(gl, type.imagem, { pixelated: true })
+        : Texture.fromColor(gl, type.cor);
+      this.textureCache.set(typeKey, texture);
     }
     return this.textureCache.get(typeKey);
   }
