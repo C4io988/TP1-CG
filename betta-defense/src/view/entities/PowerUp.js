@@ -3,10 +3,12 @@ import { Entity } from './Entity.js';
 const LIFETIME = 10; // some se o Betta não coletar a tempo
 
 export class PowerUp extends Entity {
-  constructor({ x, y, texture, typeKey, config }) {
+  constructor({ x, y, texture, uv, typeKey, config }) {
     super({ x, y, texture, hp: 1 });
-    this.size = 26;
-    this.radius = 22; // raio de coleta um pouco maior que o sprite
+    this.width = 52;
+    this.height = 54;
+    this.radius = 25;
+    this.uv = uv;
     this.typeKey = typeKey;
     this.config = config;
     this.age = 0;

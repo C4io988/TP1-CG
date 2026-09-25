@@ -1,6 +1,6 @@
 import { Entity } from './Entity.js';
 import { Projectile } from './Projetil.js';
-import { Texture } from '../../rendering/Texture.js';
+import { Texture } from '../../rendering/Texture.js?v=4';
 import { SpriteAnimation } from '../../rendering/SpriteAnimation.js';
 import { WEAPONS } from '../data/Guns.js';
 

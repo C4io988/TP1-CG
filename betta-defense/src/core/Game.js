@@ -1,16 +1,16 @@
 import { Camera, LARGURA_DO_MUNDO, ALTURA_DO_MUNDO } from '../rendering/Camera.js';
 import { Renderer } from '../rendering/Renderer.js';
-import { Texture } from '../rendering/Texture.js';
+import { Texture } from '../rendering/Texture.js?v=4';
 import { InputManager } from '../view/systems/InputManager.js';
 import { CollisionSystem } from '../view/systems/SistemaDeColisao.js';
 import { SpawnManager } from '../view/systems/SpawnManager.js';
-import { Betta } from '../view/entities/Betta.js';
+import { Betta } from '../view/entities/Betta.js?v=4';
 import { Tower } from '../view/entities/Tower.js';
-import { PowerUp } from '../view/entities/PowerUp.js';
-import { Hud } from '../view/ui/Hud.js';
+import { PowerUp } from '../view/entities/PowerUp.js?v=4';
+import { Hud } from '../view/ui/Hud.js?v=4';
 import { TIPOS_DE_MOBS } from '../view/data/Mobs.js';
-import { POWERUP_TYPES } from '../view/data/powerups.js';
-import { MusicManager } from '../audio/MusicManager.js';
+import { POWERUP_TYPES } from '../view/data/powerups.js?v=4';
+import { MusicManager } from '../audio/MusicManager.js?v=4';
 
 const WORLD = { width: LARGURA_DO_MUNDO, height: ALTURA_DO_MUNDO };
 
@@ -79,7 +79,7 @@ export class Game {
       tower: Texture.fromImage(gl, 'assets/images/titanic/titanic_sprite_sheet.png'),
       gun: Texture.fromImage(gl, 'assets/images/titanic/atirador_arpao_sheet.png', { pixelated: true }),
       betta: Texture.fromColor(gl, [255, 110, 50, 255]),
-      bettaProjectile: Texture.fromColor(gl, [255, 240, 120, 255]),
+      bettaProjectile: Texture.fromBubble(gl),
       towerProjectile: Texture.fromImage(gl, 'assets/images/titanic/arpao_animacao_sheet.png', { pixelated: true }),
       strike: Texture.fromColor(gl, [255, 255, 255, 255]),
       menuFundo: Texture.fromImage(gl, 'assets/images/titanic/titanic.jpg', { pixelated: true }),
@@ -89,10 +89,9 @@ export class Game {
       menuSombra: Texture.fromColor(gl, [3, 15, 35, 255]),
     };
     this.texturasBetta = Betta.carregarTexturas(gl);
-    this.powerupTextures = {};
-    for (const [key, config] of Object.entries(POWERUP_TYPES)) {
-      this.powerupTextures[key] = Texture.fromColor(gl, config.color);
-    }
+    this.powerupTexture = Texture.fromImage(
+      gl, 'assets/images/powerups/powerups_sheet.png', { pixelated: true },
+    );
 
     this.lastTime = 0;
     this.elapsedTime = 0;
@@ -174,6 +173,13 @@ export class Game {
 
   toggleSound() {
     return this.music.alternarSom();
+  }
+
+  voltarAoMenu() {
+    this.reset(false);
+    this.menuActive = true;
+    this.lastTime = performance.now();
+    this.music.tocarTemaDoMenu();
   }
 
   iniciarLoop() {
@@ -317,22 +323,35 @@ export class Game {
   criarPowerUp(x, y) {
     const tipos = Object.keys(POWERUP_TYPES);
     const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+    const config = POWERUP_TYPES[tipo];
+    const [spriteX, spriteY, spriteWidth, spriteHeight] = config.sprite;
     return new PowerUp({
       x,
       y,
       typeKey: tipo,
-      config: POWERUP_TYPES[tipo],
-      texture: this.powerupTextures[tipo],
+      config,
+      texture: this.powerupTexture,
+      uv: recorteUV(spriteX, spriteY, spriteWidth, spriteHeight, 1672, 941),
     });
   }
 
   verificarDerrota() {
     if (this.tower.hp <= 0) {
       this.gameOver = true;
-      this.hud.mostrarGameOver('O Titanic afundou. Os invasores tomaram o navio.', this.score, () => this.reset(true));
+      this.hud.mostrarGameOver(
+        'O Titanic afundou. Os invasores tomaram o navio.',
+        this.score,
+        () => this.reset(true),
+        () => this.voltarAoMenu(),
+      );
     } else if (this.betta.hp <= 0) {
       this.gameOver = true;
-      this.hud.mostrarGameOver('O Betta caiu em combate. O navio ficou indefeso.', this.score, () => this.reset(true));
+      this.hud.mostrarGameOver(
+        'O Betta caiu em combate. O navio ficou indefeso.',
+        this.score,
+        () => this.reset(true),
+        () => this.voltarAoMenu(),
+      );
     }
   }
 

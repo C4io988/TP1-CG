@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Betta: Guardião do Titanic</title>
-    <link rel="stylesheet" href="styles/hud.css?v=2">
+    <link rel="stylesheet" href="styles/hud.css?v=4">
 </head>
 <body>
     <div id="game-container">
@@ -18,6 +18,10 @@
                 <path class="mute-slash" d="M22 12l7 8M29 12l-7 8"/>
             </svg>
         </button>
+
+        <div class="version-label">
+            [version 0.9.1 (you are a <strong>betta</strong> tester)]
+        </div>
         
         <!-- TELA INICIAL (MENU) -->
         <div id="start-screen" class="overlay-screen">
@@ -56,8 +60,9 @@
             <h1 class="game-title">Fim de jogo</h1>
             <p id="game-over-message" class="game-over-message"></p>
             <button id="restart-btn" class="ui-btn">Reiniciar</button>
+            <button id="menu-btn" class="ui-btn">Voltar ao menu principal</button>
         </div>
     </div>
-    <script type="module" src="src/main.js?v=2"></script>
+    <script type="module" src="src/main.js?v=4"></script>
 </body>
 </html>

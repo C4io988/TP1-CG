@@ -25,6 +25,8 @@ export class Hud {
         this.gameOverScreen = document.getElementById('game-over-screen');
         this.gameOverMessage = document.getElementById('game-over-message');
         this.restartBtn = document.getElementById('restart-btn');
+        this.menuBtn = document.getElementById('menu-btn');
+        this.startScreen = document.getElementById('start-screen');
     }
 
     ocultar() {
@@ -107,7 +109,7 @@ export class Hud {
         arte.dataset.lifeFrame = String(quadro);
     }
 
-    mostrarGameOver(mensagem, score, callbackReiniciar) {
+    mostrarGameOver(mensagem, score, callbackReiniciar, callbackMenu) {
         this.hudElement.style.display = 'none'; 
         
         // 2. Mostra a tela cheia escura de Game Over
@@ -132,6 +134,13 @@ export class Hud {
             this.hudElement.style.display = 'flex';
             this.gameOverScreen.style.display = 'none'; 
             if (callbackReiniciar) callbackReiniciar(); 
+        };
+
+        this.menuBtn.onclick = () => {
+            this.hudElement.style.display = 'none';
+            this.gameOverScreen.style.display = 'none';
+            this.startScreen.style.display = 'flex';
+            if (callbackMenu) callbackMenu();
         };
     }
 

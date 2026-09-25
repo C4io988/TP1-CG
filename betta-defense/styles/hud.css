@@ -76,6 +76,25 @@ canvas {
     display: none;
 }
 
+.version-label {
+    position: absolute;
+    top: 7px;
+    left: 9px;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0;
+    text-shadow: none;
+    z-index: 200;
+    pointer-events: none;
+}
+
+.version-label strong {
+    font-weight: 800;
+}
+
 .overlay-screen {
     position: absolute;
     top: 0;
@@ -158,7 +177,7 @@ canvas {
 /* HUD */
 #hud {
     position: absolute;
-    top: 8px;
+    top: 26px;
     left: 8px;
     display: flex;
     align-items: center;
@@ -254,6 +273,10 @@ canvas {
     background-color: #3498db;
 }
 
+#menu-btn {
+    margin-top: 16px;
+}
+
 @media (max-width: 500px) {
     .sound-toggle {
         top: 10px;
@@ -264,7 +287,7 @@ canvas {
     }
 
     #hud {
-        top: 4px;
+        top: 22px;
         left: 4px;
         gap: 8px;
     }

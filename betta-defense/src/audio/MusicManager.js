@@ -1,11 +1,14 @@
 const LIMITE_POR_FAIXA_MS = 2 * 60 * 1000;
 const INTERVALO_DE_ACELERACAO = 5 * 60;
-const REPETICOES_POR_FAIXA = 4;
+const REPETICOES_POR_FAIXA = 3;
+const DURACAO_FADE_OUT = 2.5;
+const DURACAO_FADE_IN_MS = 2000;
 
 export class MusicManager {
   constructor({ menuTrack, gameTracks, volume = 0.45 }) {
     this.menuTrack = menuTrack;
     this.gameTracks = gameTracks;
+    this.volumePadrao = volume;
     this.audio = new Audio();
     this.audio.preload = 'auto';
     this.audio.volume = volume;
@@ -17,6 +20,9 @@ export class MusicManager {
     this.indice = -1;
     this.repeticaoAtual = 0;
     this.timer = null;
+    this.fadeFrame = null;
+    this.fadeOutAtivo = false;
+    this.fadeEntradaPendente = false;
     this.playToken = 0;
     this.deveTocar = false;
 
@@ -25,12 +31,17 @@ export class MusicManager {
 
       this.repeticaoAtual += 1;
       if (this.repeticaoAtual < REPETICOES_POR_FAIXA) {
+        this.cancelarFade();
+        this.fadeOutAtivo = false;
+        this.audio.volume = this.volumePadrao;
         this.audio.currentTime = 0;
         this.tentarTocar(false);
       } else {
-        this.tocarProximaFaixa();
+        this.tocarProximaFaixa(true);
       }
     });
+
+    this.audio.addEventListener('timeupdate', () => this.verificarFadeFinal());
 
     // Navegadores só liberam áudio depois de uma interação do usuário.
     const retomar = () => {
@@ -52,23 +63,31 @@ export class MusicManager {
 
   tocarTemaDoMenu() {
     this.limparTimer();
+    this.cancelarFade();
     this.mode = 'menu';
     this.deveTocar = true;
+    this.fadeOutAtivo = false;
+    this.fadeEntradaPendente = false;
     this.audio.pause();
     this.audio.src = this.menuTrack;
     this.audio.currentTime = 0;
     this.audio.loop = true;
     this.audio.playbackRate = 1;
+    this.audio.volume = this.volumePadrao;
     this.tentarTocar(false);
   }
 
   iniciarPlaylistDaPartida() {
     this.limparTimer();
+    this.cancelarFade();
     this.mode = 'partida';
     this.deveTocar = true;
+    this.fadeOutAtivo = false;
+    this.fadeEntradaPendente = false;
     this.audio.pause();
     this.audio.loop = false;
     this.audio.playbackRate = 1;
+    this.audio.volume = this.volumePadrao;
     this.ordem = embaralhar(this.gameTracks);
     this.indice = -1;
     this.repeticaoAtual = 0;
@@ -84,10 +103,11 @@ export class MusicManager {
     }
   }
 
-  tocarProximaFaixa() {
+  tocarProximaFaixa(comFade = false) {
     if (this.mode !== 'partida' || this.gameTracks.length === 0) return;
 
     this.limparTimer();
+    this.cancelarFade();
     this.indice += 1;
     if (this.indice >= this.ordem.length) {
       const anterior = this.ordem[this.ordem.length - 1];
@@ -102,7 +122,10 @@ export class MusicManager {
     this.audio.src = this.ordem[this.indice];
     this.audio.currentTime = 0;
     this.audio.loop = false;
+    this.audio.volume = comFade ? 0 : this.volumePadrao;
     this.repeticaoAtual = 0;
+    this.fadeOutAtivo = false;
+    this.fadeEntradaPendente = comFade;
     this.tentarTocar(true);
   }
 
@@ -110,17 +133,57 @@ export class MusicManager {
     const token = ++this.playToken;
     const tentativa = this.audio.play();
     if (!tentativa) {
+      this.iniciarFadeDeEntradaSeNecessario();
       if (limitarDuracao) this.agendarProximaFaixa(token);
       return;
     }
 
     tentativa
       .then(() => {
+        this.iniciarFadeDeEntradaSeNecessario();
         if (limitarDuracao) this.agendarProximaFaixa(token);
       })
       .catch(() => {
         // A próxima interação do usuário chama tentarTocar novamente.
       });
+  }
+
+  verificarFadeFinal() {
+    if (this.mode !== 'partida' || this.fadeOutAtivo) return;
+    if (this.repeticaoAtual !== REPETICOES_POR_FAIXA - 1) return;
+    if (!Number.isFinite(this.audio.duration) || this.audio.duration <= 0) return;
+
+    const restante = this.audio.duration - this.audio.currentTime;
+    if (restante <= 0 || restante > DURACAO_FADE_OUT) return;
+
+    this.fadeOutAtivo = true;
+    const duracaoReal = restante / Math.max(0.1, this.audio.playbackRate);
+    this.iniciarFade(0, duracaoReal * 1000);
+  }
+
+  iniciarFadeDeEntradaSeNecessario() {
+    if (!this.fadeEntradaPendente) return;
+    this.fadeEntradaPendente = false;
+    this.iniciarFade(this.volumePadrao, DURACAO_FADE_IN_MS);
+  }
+
+  iniciarFade(volumeFinal, duracaoMs) {
+    this.cancelarFade();
+    const volumeInicial = this.audio.volume;
+    const inicio = performance.now();
+
+    const atualizar = (agora) => {
+      const progresso = Math.min(1, (agora - inicio) / Math.max(1, duracaoMs));
+      this.audio.volume = volumeInicial + (volumeFinal - volumeInicial) * progresso;
+      if (progresso < 1) this.fadeFrame = window.requestAnimationFrame(atualizar);
+      else this.fadeFrame = null;
+    };
+    this.fadeFrame = window.requestAnimationFrame(atualizar);
+  }
+
+  cancelarFade() {
+    if (this.fadeFrame !== null) window.cancelAnimationFrame(this.fadeFrame);
+    this.fadeFrame = null;
   }
 
   agendarProximaFaixa(token) {
