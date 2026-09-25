@@ -10,7 +10,7 @@ import { PowerUp } from '../view/entities/PowerUp.js?v=5';
 import { Hud } from '../view/ui/Hud.js?v=5';
 import { TIPOS_DE_MOBS } from '../view/data/Mobs.js';
 import { POWERUP_TYPES } from '../view/data/powerups.js?v=5';
-import { MusicManager } from '../audio/MusicManager.js?v=6';
+import { MusicManager } from '../audio/MusicManager.js?v=7';
 
 const WORLD = { width: LARGURA_DO_MUNDO, height: ALTURA_DO_MUNDO };
 

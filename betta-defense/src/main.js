@@ -1,4 +1,4 @@
-import { Game } from './core/Game.js?v=6';
+import { Game } from './core/Game.js?v=7';
 
 window.onload = async () => {
     const canvas = document.getElementById('game-canvas');

@@ -1,8 +1,8 @@
 const LIMITE_POR_FAIXA_MS = 2 * 60 * 1000;
 const INTERVALO_DE_ACELERACAO = 5 * 60;
 const REPETICOES_POR_FAIXA = 3;
-const DURACAO_FADE_OUT = 2.5;
-const DURACAO_FADE_IN_MS = 2000;
+const DURACAO_FADE_OUT = 1.5;
+const DURACAO_FADE_IN_MS = 1500;
 
 export class MusicManager {
   constructor({
