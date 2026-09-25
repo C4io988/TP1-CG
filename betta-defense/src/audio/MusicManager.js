@@ -5,7 +5,9 @@ const DURACAO_FADE_OUT = 2.5;
 const DURACAO_FADE_IN_MS = 2000;
 
 export class MusicManager {
-  constructor({ menuTrack, gameTracks, volume = 0.45 }) {
+  constructor({
+    menuTrack, gameTracks, effects = {}, endTracks = [], volume = 0.45, effectsVolume = 0.65,
+  }) {
     this.menuTrack = menuTrack;
     this.gameTracks = gameTracks;
     this.volumePadrao = volume;
@@ -14,6 +16,26 @@ export class MusicManager {
     this.audio.volume = volume;
     this.audio.muted = true;
     this.somAtivo = false;
+    this.encerramentoAtual = null;
+    this.efeitos = new Map(Object.entries(effects).map(([nome, caminho]) => {
+      const efeito = new Audio(caminho);
+      efeito.preload = 'auto';
+      efeito.volume = effectsVolume;
+      efeito.muted = true;
+      return [nome, efeito];
+    }));
+    this.encerramentos = endTracks.map((config) => {
+      const audio = new Audio(config.src);
+      audio.preload = 'auto';
+      audio.volume = volume;
+      audio.muted = true;
+      audio.loop = false;
+      audio.addEventListener('ended', () => {
+        if (this.encerramentoAtual?.audio === audio) this.deveTocar = false;
+      });
+      audio.load();
+      return { audio, startAt: config.startAt ?? 0 };
+    });
 
     this.mode = 'silencioso';
     this.ordem = [];
@@ -45,7 +67,9 @@ export class MusicManager {
 
     // Navegadores só liberam áudio depois de uma interação do usuário.
     const retomar = () => {
-      if (this.deveTocar && this.audio.paused) this.tentarTocar(this.mode === 'partida');
+      if (!this.deveTocar) return;
+      if (this.mode === 'encerramento') this.tentarTocarEncerramento();
+      else if (this.audio.paused) this.tentarTocar(this.mode === 'partida');
     };
     window.addEventListener('pointerdown', retomar, { passive: true });
     window.addEventListener('keydown', retomar);
@@ -54,14 +78,27 @@ export class MusicManager {
   alternarSom() {
     this.somAtivo = !this.somAtivo;
     this.audio.muted = !this.somAtivo;
+    for (const efeito of this.efeitos.values()) efeito.muted = !this.somAtivo;
+    for (const faixa of this.encerramentos) faixa.audio.muted = !this.somAtivo;
 
-    if (this.somAtivo && this.deveTocar && this.audio.paused) {
-      this.tentarTocar(this.mode === 'partida');
+    if (this.somAtivo && this.deveTocar) {
+      if (this.mode === 'encerramento') this.tentarTocarEncerramento();
+      else if (this.audio.paused) this.tentarTocar(this.mode === 'partida');
     }
     return this.somAtivo;
   }
 
+  tocarEfeito(nome) {
+    const efeito = this.efeitos.get(nome);
+    if (!efeito || !this.somAtivo) return;
+
+    efeito.currentTime = 0;
+    const tentativa = efeito.play();
+    if (tentativa) tentativa.catch(() => {});
+  }
+
   tocarTemaDoMenu() {
+    this.pararEncerramento();
     this.limparTimer();
     this.cancelarFade();
     this.mode = 'menu';
@@ -78,6 +115,7 @@ export class MusicManager {
   }
 
   iniciarPlaylistDaPartida() {
+    this.pararEncerramento();
     this.limparTimer();
     this.cancelarFade();
     this.mode = 'partida';
@@ -92,6 +130,45 @@ export class MusicManager {
     this.indice = -1;
     this.repeticaoAtual = 0;
     this.tocarProximaFaixa();
+  }
+
+  tocarEncerramentoAleatorio() {
+    if (this.encerramentos.length === 0) return;
+
+    this.limparTimer();
+    this.cancelarFade();
+    this.playToken += 1;
+    this.audio.pause();
+    this.pararEncerramento();
+    this.mode = 'encerramento';
+    this.deveTocar = true;
+
+    const indice = Math.floor(Math.random() * this.encerramentos.length);
+    this.encerramentoAtual = this.encerramentos[indice];
+    this.tentarTocarEncerramento(true);
+  }
+
+  tentarTocarEncerramento(reiniciar = false) {
+    if (!this.encerramentoAtual) return;
+    const { audio, startAt } = this.encerramentoAtual;
+    if (!reiniciar && !audio.paused) return;
+
+    const iniciar = () => {
+      if (reiniciar) audio.currentTime = startAt;
+      const tentativa = audio.play();
+      if (tentativa) tentativa.catch(() => {});
+    };
+
+    if (audio.readyState >= 1) iniciar();
+    else audio.addEventListener('loadedmetadata', iniciar, { once: true });
+  }
+
+  pararEncerramento() {
+    for (const faixa of this.encerramentos) {
+      faixa.audio.pause();
+      if (faixa.audio.readyState >= 1) faixa.audio.currentTime = faixa.startAt;
+    }
+    this.encerramentoAtual = null;
   }
 
   atualizarVelocidade(tempoDePartida) {

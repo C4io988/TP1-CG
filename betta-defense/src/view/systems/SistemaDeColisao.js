@@ -1,5 +1,7 @@
 export class CollisionSystem {
   verificarBettaContraMobs(tower, betta, enemies) {
+    let acertosNoBetta = 0;
+
     for (const enemy of enemies) {
       if (!enemy.alive) continue;
       if (enemy.attackCooldown > 0) continue;
@@ -10,12 +12,15 @@ export class CollisionSystem {
 
       if (encostouNoBetta) {
         betta.receberDano(enemy.contactDamage);
+        acertosNoBetta += 1;
         enemy.attackCooldown = 1;
       } else if (atacaTitanic && encostouNoTitanic) {
         tower.receberDano(enemy.contactDamage);
         enemy.attackCooldown = 1; // 1s entre ataques de contato do mesmo inimigo
       }
     }
+
+    return acertosNoBetta;
   }
 
   verificarProjeteisContraMobs(projectiles, enemies) {

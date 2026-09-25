@@ -1,16 +1,16 @@
 import { Camera, LARGURA_DO_MUNDO, ALTURA_DO_MUNDO } from '../rendering/Camera.js';
 import { Renderer } from '../rendering/Renderer.js';
-import { Texture } from '../rendering/Texture.js?v=4';
+import { Texture } from '../rendering/Texture.js?v=5';
 import { InputManager } from '../view/systems/InputManager.js';
-import { CollisionSystem } from '../view/systems/SistemaDeColisao.js';
+import { CollisionSystem } from '../view/systems/SistemaDeColisao.js?v=5';
 import { SpawnManager } from '../view/systems/SpawnManager.js';
-import { Betta } from '../view/entities/Betta.js?v=4';
+import { Betta } from '../view/entities/Betta.js?v=5';
 import { Tower } from '../view/entities/Tower.js';
-import { PowerUp } from '../view/entities/PowerUp.js?v=4';
-import { Hud } from '../view/ui/Hud.js?v=4';
+import { PowerUp } from '../view/entities/PowerUp.js?v=5';
+import { Hud } from '../view/ui/Hud.js?v=5';
 import { TIPOS_DE_MOBS } from '../view/data/Mobs.js';
-import { POWERUP_TYPES } from '../view/data/powerups.js?v=4';
-import { MusicManager } from '../audio/MusicManager.js?v=4';
+import { POWERUP_TYPES } from '../view/data/powerups.js?v=5';
+import { MusicManager } from '../audio/MusicManager.js?v=6';
 
 const WORLD = { width: LARGURA_DO_MUNDO, height: ALTURA_DO_MUNDO };
 
@@ -68,6 +68,14 @@ export class Game {
         'assets/audio/partida-2.mp3',
         'assets/audio/partida-3.mp3',
         'assets/audio/partida-4.mp3',
+      ],
+      effects: {
+        powerup: 'assets/audio/powerup.mp3',
+        danoBetta: 'assets/audio/dano-betta.mp3',
+      },
+      endTracks: [
+        { src: 'assets/audio/end-game-1.mp3', startAt: 1.128 },
+        { src: 'assets/audio/end-game-2.mp3', startAt: 0.595 },
       ],
     });
 
@@ -287,10 +295,16 @@ export class Game {
 
     this.tratarClique();
 
-    this.collision.verificarBettaContraMobs(this.tower, this.betta, this.enemies);
+    const acertosNoBetta = this.collision.verificarBettaContraMobs(
+      this.tower, this.betta, this.enemies,
+    );
+    if (acertosNoBetta > 0) this.music.tocarEfeito('danoBetta');
     this.score += this.collision.verificarProjeteisContraMobs(this.projectiles, this.enemies) * 10;
     const coletadas = this.collision.BettaPowerUps(this.betta, this.powerups, this.tower);
-    for (const nome of coletadas) this.hud.showToast(nome);
+    for (const nome of coletadas) {
+      this.hud.showToast(nome);
+      this.music.tocarEfeito('powerup');
+    }
 
     this.limparInimigosDerrotados();
     this.projectiles = this.projectiles.filter((p) => p.alive);
@@ -338,6 +352,7 @@ export class Game {
   verificarDerrota() {
     if (this.tower.hp <= 0) {
       this.gameOver = true;
+      this.music.tocarEncerramentoAleatorio();
       this.hud.mostrarGameOver(
         'O Titanic afundou. Os invasores tomaram o navio.',
         this.score,
@@ -346,6 +361,7 @@ export class Game {
       );
     } else if (this.betta.hp <= 0) {
       this.gameOver = true;
+      this.music.tocarEncerramentoAleatorio();
       this.hud.mostrarGameOver(
         'O Betta caiu em combate. O navio ficou indefeso.',
         this.score,

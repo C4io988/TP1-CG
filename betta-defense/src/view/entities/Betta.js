@@ -1,6 +1,6 @@
 import { Entity } from './Entity.js';
 import { Projectile } from './Projetil.js';
-import { Texture } from '../../rendering/Texture.js?v=4';
+import { Texture } from '../../rendering/Texture.js?v=5';
 import { SpriteAnimation } from '../../rendering/SpriteAnimation.js';
 import { WEAPONS } from '../data/Guns.js';
 
@@ -9,6 +9,8 @@ const ATTACK_RANGE = 250; // pixels
 const QUADROS_DO_NADO = 8;
 const DURACAO_DO_QUADRO = 0.1; // segundos por quadro da animação de nado
 const QUADROS_NOVOS = 8;
+const DURACAO_PISCADA_DE_DANO = 3;
+const INTERVALO_DA_PISCADA = 0.12;
 
 // caminho de cada sprite que o Betta pode usar, dependendo do estado
 const CAMINHOS_DOS_SPRITES = {
@@ -74,6 +76,7 @@ export class Betta extends Entity {
     this.projectileTexture = projectileTexture ?? Texture.fromColor(gl, [255, 240, 120, 255]);
     this.fireCooldown = 0;
     this.currentTarget = null;
+    this.tempoPiscando = 0;
 
     this.direcao = 'direita'; // última direção encarada, usada quando ele para
     this.animacaoNado = new SpriteAnimation({
@@ -90,6 +93,9 @@ export class Betta extends Entity {
   }
 
   update(dt, { input, enemies, bounds }) {
+    super.update(dt);
+    if (this.tempoPiscando > 0) this.tempoPiscando = Math.max(0, this.tempoPiscando - dt);
+
     let dx = 0;
     let dy = 0;
     if (input.teclaPressionada('w') || input.teclaPressionada('arrowup')) dy -= 1;
@@ -113,6 +119,17 @@ export class Betta extends Entity {
 
     if (this.fireCooldown > 0) this.fireCooldown -= dt;
     this.currentTarget = this.encontrarInimigoMaisProximo(enemies);
+  }
+
+  receberDano(amount) {
+    super.receberDano(amount);
+    this.tempoPiscando = DURACAO_PISCADA_DE_DANO;
+  }
+
+  get tint() {
+    if (this.tempoPiscando <= 0) return [1, 1, 1, 1];
+    const visivel = Math.floor(this.tempoPiscando / INTERVALO_DA_PISCADA) % 2 === 0;
+    return [1, 1, 1, visivel ? 1 : 0.18];
   }
 
   // Decide pra que lado o Betta está olhando e troca a textura/quadro
