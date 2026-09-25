@@ -15,6 +15,15 @@ window.onload = async () => {
     const btnPlay = document.getElementById('btn-play');
     const btnCredits = document.getElementById('btn-credits');
     const btnBack = document.getElementById('btn-back');
+    const soundToggle = document.getElementById('sound-toggle');
+
+    soundToggle.addEventListener('click', () => {
+        const somAtivo = game.toggleSound();
+        soundToggle.classList.toggle('is-on', somAtivo);
+        soundToggle.setAttribute('aria-pressed', String(somAtivo));
+        soundToggle.setAttribute('aria-label', somAtivo ? 'Desativar som' : 'Ativar som');
+        soundToggle.title = somAtivo ? 'Desativar som' : 'Ativar som';
+    });
 
     // Navegação do Menu
     btnPlay.addEventListener('click', () => {
@@ -32,4 +41,7 @@ window.onload = async () => {
         creditsScreen.style.display = 'none';
         startScreen.style.display = 'flex';
     });
+
+    // Mantém a capa WebGL animada enquanto o menu está aberto.
+    game.startMenuAnimation();
 };

@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Betta: Guardião do Titanic</title>
-    <link rel="stylesheet" href="styles/hud.css">
+    <link rel="stylesheet" href="styles/hud.css?v=2">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
+
+        <button id="sound-toggle" class="sound-toggle" type="button"
+                aria-label="Ativar som" aria-pressed="false" title="Ativar som">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+                <path class="speaker" d="M5 12h6l7-6v20l-7-6H5z"/>
+                <path class="sound-waves" d="M22 11c2.5 2.7 2.5 7.3 0 10M25 7c5 5 5 13 0 18"/>
+                <path class="mute-slash" d="M22 12l7 8M29 12l-7 8"/>
+            </svg>
+        </button>
         
         <!-- TELA INICIAL (MENU) -->
         <div id="start-screen" class="overlay-screen">
@@ -49,6 +58,6 @@
             <button id="restart-btn" class="ui-btn">Reiniciar</button>
         </div>
     </div>
-    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/main.js?v=2"></script>
 </body>
 </html>

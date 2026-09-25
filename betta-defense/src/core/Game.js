@@ -10,6 +10,7 @@ import { PowerUp } from '../view/entities/PowerUp.js';
 import { Hud } from '../view/ui/Hud.js';
 import { TIPOS_DE_MOBS } from '../view/data/Mobs.js';
 import { POWERUP_TYPES } from '../view/data/powerups.js';
+import { MusicManager } from '../audio/MusicManager.js';
 
 const WORLD = { width: LARGURA_DO_MUNDO, height: ALTURA_DO_MUNDO };
 
@@ -32,6 +33,13 @@ const QUADROS_PEIXES = [[142, 112], [397, 103], [682, 72]].map(([y, altura]) =>
 const INTERVALO_PEIXES = 30;
 const DURACAO_PEIXES = 8;
 
+// O menu usa oito quadros para cada personagem. O Betta percorre as duas
+// linhas da animação horizontal; o tubarão alterna entre nado e ataque.
+const QUADROS_MENU_BETTA = [[268, 282], [590, 280]].flatMap(([y, altura]) =>
+  Array.from({ length: 4 }, (_, i) => recorteUV(i * 362, y, 362, altura, 1448, 1086)));
+const QUADROS_MENU_TUBARAO = [98, 531].flatMap(y =>
+  Array.from({ length: 4 }, (_, i) => recorteUV(i * 444, y, 444, 286, 1776, 888)));
+
 // baseY é o ponto em que cada decoração encosta no chão do mapa.
 const DECORACOES_CENARIO = [
   { x: 365, baseY: 655, largura: 108, altura: 110, textura: 'algas', quadros: QUADROS_ALGAS[0], intervalo: 0.28, fase: 0 },
@@ -53,6 +61,15 @@ export class Game {
     this.collision = new CollisionSystem();
     this.spawnManager = new SpawnManager(TIPOS_DE_MOBS);
     this.hud = new Hud();
+    this.music = new MusicManager({
+      menuTrack: 'assets/audio/tema-menu.mp3',
+      gameTracks: [
+        'assets/audio/partida-1.mp3',
+        'assets/audio/partida-2.mp3',
+        'assets/audio/partida-3.mp3',
+        'assets/audio/partida-4.mp3',
+      ],
+    });
 
     this.textures = {
       chao: Texture.fromImage(gl, 'assets/images/cenario/mapa_base_estatica.png'),
@@ -65,6 +82,11 @@ export class Game {
       bettaProjectile: Texture.fromColor(gl, [255, 240, 120, 255]),
       towerProjectile: Texture.fromImage(gl, 'assets/images/titanic/arpao_animacao_sheet.png', { pixelated: true }),
       strike: Texture.fromColor(gl, [255, 255, 255, 255]),
+      menuFundo: Texture.fromImage(gl, 'assets/images/titanic/titanic.jpg', { pixelated: true }),
+      menuBetta: Texture.fromImage(gl, 'assets/images/betta/betta_nado_horizontal_animacao.png', { pixelated: true }),
+      menuTubarao: Texture.fromImage(gl, 'assets/images/enemies/tubarao_nado_ataque_sheet.png', { pixelated: true }),
+      menuBolha: Texture.fromColor(gl, [150, 225, 255, 255]),
+      menuSombra: Texture.fromColor(gl, [3, 15, 35, 255]),
     };
     this.texturasBetta = Betta.carregarTexturas(gl);
     this.powerupTextures = {};
@@ -74,8 +96,18 @@ export class Game {
 
     this.lastTime = 0;
     this.elapsedTime = 0;
+    this.menuTime = 0;
     this.score = 0;
     this.gameOver = false;
+    this.menuActive = true;
+    this.loopStarted = false;
+    this.menuBubbles = Array.from({ length: 22 }, (_, i) => ({
+      x: 45 + (i * 277) % 1510,
+      y: 40 + (i * 173) % 900,
+      speed: 25 + (i * 19) % 55,
+      size: 5 + (i * 7) % 13,
+      phase: i * 0.73,
+    }));
 
     window.addEventListener('resize', () => this.ajustarTamanho());
     this.ajustarTamanho();
@@ -97,7 +129,7 @@ export class Game {
     return new Game(canvas, gl, renderer, camera);
   }
 
-  reset() {
+  reset(reiniciarMusica = false) {
     this.tower = new Tower({
       x: WORLD.width - 260,
       y: 215,
@@ -123,26 +155,101 @@ export class Game {
     this.spawnManager.timer = 0;
     this.hud.ocultar();
     this.hud.update({ tower: this.tower, betta: this.betta, score: this.score });
+    if (reiniciarMusica) this.music.iniciarPlaylistDaPartida();
   }
 
   start() {
+    this.menuActive = false;
+    this.lastTime = performance.now();
+    this.music.iniciarPlaylistDaPartida();
+    this.iniciarLoop();
+  }
+
+  startMenuAnimation() {
+    this.menuActive = true;
+    this.lastTime = performance.now();
+    this.music.tocarTemaDoMenu();
+    this.iniciarLoop();
+  }
+
+  toggleSound() {
+    return this.music.alternarSom();
+  }
+
+  iniciarLoop() {
+    if (this.loopStarted) return;
+    this.loopStarted = true;
     requestAnimationFrame((t) => this.loop(t));
   }
 
   loop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
+    const dt = Math.max(0, Math.min((timestamp - this.lastTime) / 1000, 0.05));
     this.lastTime = timestamp;
 
-    if (!this.gameOver) {
+    if (this.menuActive) {
+      this.menuTime += dt;
+    } else if (!this.gameOver) {
       this.update(dt);
     }
-    this.render();
+    if (this.menuActive) this.renderMenu();
+    else this.render();
 
     requestAnimationFrame((t) => this.loop(t));
   }
 
+  renderMenu() {
+    this.renderer.clear();
+
+    // 1ª camada: cenário estático do Titanic.
+    this.renderer.desenharQuad(
+      WORLD.width / 2, WORLD.height / 2, WORLD.width, WORLD.height,
+      this.textures.menuFundo,
+    );
+    this.renderer.desenharQuad(
+      WORLD.width / 2, WORLD.height / 2, WORLD.width, WORLD.height,
+      this.textures.menuSombra, [0.06, 0.12, 0.24, 0.38],
+    );
+
+    // 2ª camada: Betta e tubarão se encarando, ambos em animação de 8 quadros.
+    const quadro = Math.floor(this.menuTime / 0.14) % 8;
+    const flutuarBetta = Math.sin(this.menuTime * 1.8) * 10;
+    const flutuarTubarao = Math.sin(this.menuTime * 1.8 + Math.PI) * 8;
+    this.renderer.desenharQuad(
+      405, 535 + flutuarBetta, 420, 315,
+      this.textures.menuBetta, [1.08, 1.08, 1.18, 1], QUADROS_MENU_BETTA[quadro],
+    );
+    const uvTubarao = QUADROS_MENU_TUBARAO[quadro];
+    this.renderer.desenharQuad(
+      1195, 535 + flutuarTubarao, 500, 320,
+      this.textures.menuTubarao, [1.08, 1.08, 1.12, 1],
+      {
+        ...uvTubarao,
+        offsetX: uvTubarao.offsetX + uvTubarao.scaleX,
+        scaleX: -uvTubarao.scaleX,
+      },
+    );
+
+    // 3ª camada: pequenos anéis feitos com quatro quads subindo em loop.
+    for (const bolha of this.menuBubbles) this.desenharBolhaMenu(bolha);
+  }
+
+  desenharBolhaMenu(bolha) {
+    const faixa = WORLD.height + 100;
+    const y = ((bolha.y - this.menuTime * bolha.speed + faixa * 100) % faixa) - 50;
+    const x = bolha.x + Math.sin(this.menuTime * 1.3 + bolha.phase) * 12;
+    const s = bolha.size;
+    const borda = Math.max(2, s * 0.22);
+    const cor = [0.7, 0.92, 1, 0.58];
+
+    this.renderer.desenharQuad(x, y - s / 2, s, borda, this.textures.menuBolha, cor);
+    this.renderer.desenharQuad(x, y + s / 2, s, borda, this.textures.menuBolha, cor);
+    this.renderer.desenharQuad(x - s / 2, y, borda, s, this.textures.menuBolha, cor);
+    this.renderer.desenharQuad(x + s / 2, y, borda, s, this.textures.menuBolha, cor);
+  }
+
   update(dt) {
     this.elapsedTime += dt;
+    this.music.atualizarVelocidade(this.elapsedTime);
 
     this.tower.update(dt, this.enemies);
     this.betta.update(dt, {
@@ -222,10 +329,10 @@ export class Game {
   verificarDerrota() {
     if (this.tower.hp <= 0) {
       this.gameOver = true;
-      this.hud.mostrarGameOver('O Titanic afundou. Os invasores tomaram o navio.', this.score, () => this.reset());
+      this.hud.mostrarGameOver('O Titanic afundou. Os invasores tomaram o navio.', this.score, () => this.reset(true));
     } else if (this.betta.hp <= 0) {
       this.gameOver = true;
-      this.hud.mostrarGameOver('O Betta caiu em combate. O navio ficou indefeso.', this.score, () => this.reset());
+      this.hud.mostrarGameOver('O Betta caiu em combate. O navio ficou indefeso.', this.score, () => this.reset(true));
     }
   }
 
