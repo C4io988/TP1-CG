@@ -1,47 +1,59 @@
 # Betta Defense
 
-## Sobre o jogo
+Jogo desenvolvido como trabalho acadêmico da disciplina de Computação Gráfica.
 
-Betta Defense é um jogo de defesa com elementos de *survivors-like*. O Titanic
-fica parado no cenário e precisa ser protegido dos monstros que chegam pelas
-bordas. O Betta é o personagem controlado pelo jogador e pode nadar pelo mapa
-para ajudar na defesa.
+## (a) O jogo
 
-## O que já funciona
+**Betta Defense** é um jogo de defesa (*power defense*) desenvolvido com WebGL 2. O jogador controla um peixe Betta e precisa proteger o Titanic de ondas crescentes de criaturas marinhas.
 
-- O Betta se move com `WASD` ou pelas setas do teclado.
-- O Betta dispara automaticamente quando existe um inimigo próximo.
-- O Titanic também dispara sozinho contra os inimigos ao seu alcance.
-- O clique do mouse ativa um golpe em área do Titanic.
-- Existem quatro tipos de inimigos: sardinha, piranha, tubarão e lula.
-- Alguns inimigos perseguem o Betta e outros vão direto para o Titanic.
-- Cada tipo possui vida, velocidade e dano próprios.
-- Os inimigos entram pela esquerda e pela parte de baixo do mapa.
-- A frequência dos inimigos aumenta com o tempo.
-- Inimigos derrotados podem deixar power-ups.
-- O Betta coleta os power-ups ao passar por cima deles.
-- Os power-ups podem melhorar o dano, a cadência e a área do Titanic, além de
-	recuperar a vida do Titanic ou do Betta.
-- A HUD mostra a vida dos dois personagens, a pontuação e os upgrades.
-- O jogo termina quando o Titanic ou o Betta ficam sem vida.
-- A partida pode ser reiniciada pela tela de Game Over.
-- A câmera usa um tamanho virtual fixo e mantém a proporção em telas diferentes.
+O Betta se movimenta pelo cenário, dispara bolhas automaticamente contra inimigos próximos e coleta power-ups. O Titanic também ataca automaticamente e possui um golpe em área acionado pelo jogador. A partida termina quando a vida do Betta ou do navio chega a zero.
 
-## Controles
+| Ação | Controle |
+| --- | --- |
+| Movimentar o Betta | `WASD` ou setas direcionais |
+| Usar o golpe em área do Titanic | Clique do mouse |
+| Ativar ou desativar o áudio | Ícone de som no canto superior direito |
 
-- `WASD` ou setas: movimentar o Betta.
-- Clique do mouse: usar o golpe em área do Titanic.
+Como o projeto utiliza módulos JavaScript e carrega shaders por `fetch`, ele deve ser executado por um servidor HTTP. Um exemplo é iniciar `python -m http.server 8000` na raiz do repositório e acessar `http://localhost:8000`.
 
-## O que ainda falta
+## (b) Criadores
 
-- Trocar os retângulos coloridos por sprites e texturas reais.
-- Usar os caminhos de imagem que já estão definidos nos arquivos de dados.
-- Fazer o arpão e o canudinho funcionarem como armas disponíveis durante a
-	partida.
-- Criar telas de menu ou splash, caso sejam exigidas na entrega.
-- Adicionar sons e partículas, que são melhorias opcionais.
+| Nome | GitHub | Contato |
+| --- | --- | --- |
+| João Pedro Santos | [@joopedriantos](https://github.com/joopedriantos) | [joaosilvasantos1702@gmail.com](mailto:joaosilvasantos1702@gmail.com) |
+| Caio Costa | [@C4io988](https://github.com/C4io988) | [caiocosta2002@hotmail.com](mailto:caiocosta2002@hotmail.com) |
 
-## Como executar
+## (c) Media kit
 
-O jogo usa módulos JavaScript e carrega os shaders com `fetch`. Por isso, deve
-ser aberto por um servidor local
+**Menu principal**
+
+![Menu principal do Betta Defense, com o Betta e um tubarão diante do Titanic](assets/images/readme/menu-principal.png)
+
+**Partida em andamento**
+
+![Partida do Betta Defense com inimigos, power-ups, HUD e o Titanic](assets/images/readme/partida.png)
+
+**Tela de fim de jogo**
+
+![Tela de fim de jogo com pontuação e opções para reiniciar ou voltar ao menu](assets/images/readme/fim-de-jogo.png)
+
+## (d) Opcionais implementados
+
+- Menu principal animado em três camadas: fundo do Titanic, personagens em *sprite sheets* e bolhas em movimento.
+- Animações direcionais do Betta e animações de movimento e ataque dos inimigos.
+- Quatro tipos de inimigos, com atributos, alvos e comportamentos diferentes.
+- Cinco power-ups: cadência, dano, área de ataque, reparo do casco e ração do Betta.
+- HUD personalizada com vida do Betta, vida do Titanic e pontuação.
+- Disparos do Betta representados por bolhas transparentes.
+- Efeitos visuais e sonoros para dano e coleta de power-ups.
+- Trilha sonora aleatória, transições graduais, aumento de velocidade durante partidas longas e músicas exclusivas de fim de jogo.
+- Tela de Game Over com pontuação final, reinício da partida e retorno ao menu principal.
+- Câmera com área virtual fixa e adaptação a diferentes proporções de tela.
+
+## (e) Créditos
+
+- Imagens, ilustrações e sprites criados com auxílio do [ChatGPT, da OpenAI](https://chatgpt.com/).
+- Músicas e efeitos sonoros criados com [ElevenLabs](https://elevenlabs.io/).
+- Código, integração WebGL e design do jogo: João Pedro Santos e Caio Costa.
+
+Projeto produzido para fins acadêmicos.
